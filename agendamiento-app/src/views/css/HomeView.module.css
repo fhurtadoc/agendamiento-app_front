@@ -1,0 +1,161 @@
+/* src/views/css/HomeView.module.css */
+
+.container {
+  min-height: 100vh;
+  background-color: #f8f9fa; /* Fondo gris muy suave */
+  padding: 1.5rem;
+}
+
+/* Encabezado de bienvenida */
+.header {
+  margin-bottom: 2rem;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.welcomeTitle {
+  font-size: 1.75rem;
+  color: #111827;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.welcomeTitle span {
+  color: var(--primary-color); /* Nombre de la empresa en color corporativo */
+}
+
+.userInfo {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+/* Tarjeta de Contenido (Dashboard) */
+.dashboardCard {
+  background-color: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  max-width: 800px;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+}
+
+.cardTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #374151;
+}
+
+.emptyStateText {
+  color: #9ca3af;
+  margin-bottom: 2rem;
+}
+
+/* Botones de Acción */
+.actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap; /* En móviles pequeños, los botones bajan */
+}
+
+.primaryButton {
+  padding: 0.75rem 1.5rem;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none; /* Por si usamos Link */
+  transition: opacity 0.2s;
+}
+
+.secondaryButton {
+  padding: 0.75rem 1.5rem;
+  background-color: white;
+  color: #ef4444; /* Rojo para salir */
+  border: 1px solid #fee2e2;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.secondaryButton:hover {
+  background-color: #fef2f2;
+}
+
+/* Ajustes Móviles */
+@media (max-width: 480px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .welcomeTitle {
+    font-size: 1.5rem;
+  }
+  
+  .actions {
+    flex-direction: column;
+  }
+  
+  .primaryButton, .secondaryButton {
+    width: 100%; /* Botones anchos en móvil */
+  }
+}
+
+/* Add to HomeView.module.css */
+
+.appointmentsSection {
+  margin: 20px 0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.appointmentList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.appointmentItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  background-color: #f9fafb;
+  margin-bottom: 8px;
+  border-radius: 6px;
+}
+
+.apptInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.serviceName {
+  font-weight: bold;
+  color: #333;
+}
+
+.apptDate {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.statusBadge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  text-transform: capitalize;
+  font-weight: 600;
+}
+
+/* Status colors */
+.confirmed { background-color: #d1fae5; color: #065f46; } /* Green */
+.pending { background-color: #fef3c7; color: #92400e; }   /* Yellow */
+.cancelled { background-color: #fee2e2; color: #991b1b; } /* Red */

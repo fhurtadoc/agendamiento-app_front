@@ -1,0 +1,50 @@
+/* Contenedor principal del paso */
+.stepContainer {
+  padding: 10px 0;
+  /* Animación suave al cambiar de paso */
+  animation: fadeIn 0.4s ease-out;
+}
+
+.stepContainer h2 {
+  font-size: 1.4rem;
+  color: #1f2937; /* Gris oscuro */
+  margin-bottom: 24px;
+  font-weight: 700;
+  text-align: left;
+}
+
+/* LA GRILLA RESPONSIVA */
+.grid {
+  display: grid;
+  /* Por defecto (Móvil): 1 sola columna que ocupa todo el ancho */
+  grid-template-columns: 1fr;
+  gap: 16px; /* Espacio entre tarjetas */
+}
+
+/* Media Query para Tablet (sm) */
+@media (min-width: 640px) {
+  .grid {
+    /* 2 Columnas */
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Media Query para PC/Laptop (lg) */
+@media (min-width: 1024px) {
+  .grid {
+    /* 3 Columnas */
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Animación de entrada */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px); /* Entra subiendo un poquito */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,91 @@
+/* Contenedor Principal: Centrado y con límite de ancho */
+.wizardContainer {
+  max-width: 800px; /* Para que en PC no se vea gigante */
+  margin: 0 auto;   /* Centrado horizontal */
+  padding: 20px;
+  min-height: 80vh; /* Ocupa buena parte de la altura */
+  display: flex;
+  flex-direction: column;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* --- BARRA DE PROGRESO --- */
+.progressBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 40px; /* Espacio antes del contenido */
+  padding: 0 10px;
+}
+
+/* El texto de cada paso ("1. Servicio") */
+.step {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #9ca3af; /* Gris claro (Inactivo) */
+  transition: all 0.3s ease;
+  white-space: nowrap; /* Evita que el texto se parta en dos líneas */
+}
+
+/* Estado ACTIVO (El paso actual) */
+.activeStep {
+  color: #4c40e6; /* Tu color primario */
+  transform: scale(1.05); /* Un pequeño pop visual */
+}
+
+/* La línea conectora entre pasos */
+.line {
+  flex: 1; /* Ocupa todo el espacio disponible entre textos */
+  height: 2px;
+  background-color: #e5e7eb; /* Gris muy suave */
+  margin: 0 15px; /* Separación con los textos */
+  border-radius: 2px;
+}
+
+/* --- CONTENIDO DEL WIZARD --- */
+.stepContent {
+  flex: 1;
+  position: relative;
+}
+
+/* --- ESTILOS AUXILIARES (Para los placeholders y botones temporales) --- */
+.placeholder {
+  text-align: center;
+  padding: 40px;
+  background-color: white;
+  border: 2px dashed #e5e7eb;
+  border-radius: 12px;
+  color: #6b7280;
+}
+
+.placeholder h3 {
+  margin-top: 0;
+  color: #1f2937;
+}
+
+.placeholder button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #f3f4f6;
+  border: none;
+  border-radius: 8px;
+  color: #4b5563;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.placeholder button:hover {
+  background-color: #e5e7eb;
+}
+
+/* RESPONSIVE: Ajustes para móviles muy pequeños */
+@media (max-width: 400px) {
+  .step {
+    font-size: 0.8rem; /* Texto más pequeño */
+  }
+  
+  .line {
+    margin: 0 8px; /* Menos espacio en la línea */
+  }
+}

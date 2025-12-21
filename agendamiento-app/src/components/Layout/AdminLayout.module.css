@@ -1,0 +1,89 @@
+/* src/layouts/css/AdminLayout.module.css */
+
+.container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #1e293b; /* Dark Slate default for Admin background */
+}
+
+.sidebar {
+  width: 260px;
+  background-color: #0f172a; /* Darker Slate */
+  padding: 20px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #334155;
+}
+
+.sidebarHeader {
+  margin-bottom: 30px;
+}
+
+.sidebarTitle {
+  /* Uses DB color, defaults to Sky Blue if not found */
+  color: var(--primary-color, #38bdf8); 
+  letter-spacing: 1px;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 1.2rem;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.navLink {
+  text-decoration: none;
+  color: #94a3b8;
+  font-size: 15px;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.navLink:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: white;
+  /* Little highlight using the primary color */
+  border-left-color: var(--primary-color, #38bdf8);
+}
+
+.logoutContainer {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid #334155;
+}
+
+.logoutButton {
+  background: transparent;
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  width: 100%;
+  font-weight: 500;
+  transition: background 0.3s;
+}
+
+.logoutButton:hover {
+  background-color: #ef4444;
+  color: white;
+}
+
+.mainContent {
+  flex: 1;
+  padding: 40px;
+  background-color: #f1f5f9; /* Light gray for content area */
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
+  margin: 10px 10px 10px 0; /* Creates that "card" effect */
+  overflow-y: auto;
+}

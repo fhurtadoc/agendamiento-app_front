@@ -1,0 +1,102 @@
+/* Contenedor principal de la tarjeta */
+.card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: white;
+  border: 1px solid #e5e7eb; /* Gris suave */
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Efecto Hover (cuando pasas el mouse) */
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: #dbeafe; /* Azul muy suave */
+}
+
+/* Estado SELECCIONADO (Importante para el feedback visual) */
+.selected {
+  border-color: #4c40e6; /* Tu color primario */
+  background-color: #f5f3ff; /* Fondo tintado suave */
+  box-shadow: 0 0 0 2px rgba(76, 64, 230, 0.1);
+}
+
+/* Sección de texto (Izquierda) */
+.info {
+  flex: 1;
+  padding-right: 15px;
+}
+
+.title {
+  margin: 0 0 4px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937; /* Gris oscuro */
+}
+
+.details {
+  margin: 0 0 12px 0;
+  font-size: 0.9rem;
+  color: #6b7280; /* Gris medio */
+  line-height: 1.4;
+  
+  /* Truncar texto si es muy largo (opcional) */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Fila de metadatos (Duración y Precio) */
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.85rem;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #6b7280;
+}
+
+.metaItemHighlight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #4c40e6; /* Color primario */
+  font-weight: 700;
+  background-color: rgba(76, 64, 230, 0.08);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+/* Caja del Icono (Derecha) */
+.iconBox {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0; /* Evita que se aplaste si hay mucho texto */
+}
+
+/* Cambiar color del icono cuando la tarjeta está seleccionada o en hover */
+.card:hover .iconBox,
+.selected .iconBox {
+  background-color: #4c40e6;
+  color: white;
+}

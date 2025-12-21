@@ -1,0 +1,147 @@
+/* src/views/css/RegisterView.module.css */
+
+/* Contenedor principal: Centrado en pantallas grandes */
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f3f4f6; /* Gris suave de fondo */
+  padding: 1rem;
+}
+
+/* Tarjeta blanca del formulario */
+.card {
+  background-color: white;
+  padding: 2.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  width: 100%;
+  max-width: 450px; /* Ancho máximo cómodo para leer */
+  transition: all 0.3s ease;
+}
+
+/* Encabezado */
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 1.875rem; /* ~30px */
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+/* Grupo del formulario */
+.formGroup {
+  margin-bottom: 1.25rem;
+}
+
+.label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem; /* Vital para móviles: evita zoom al escribir */
+  color: #111827;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  border-color: var(--primary-color); /* Dinámico */
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1); /* Efecto glow sutil */
+}
+
+/* Botón de acción principal */
+.button {
+  width: 100%;
+  padding: 0.875rem;
+  background-color: var(--primary-color); /* Dinámico */
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  margin-top: 1rem;
+}
+
+.button:hover {
+  opacity: 0.9;
+}
+
+.button:active {
+  transform: scale(0.98);
+}
+
+.button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Mensaje de Error */
+.error {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+/* Footer (Link Login) */
+.footer {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.link {
+  color: var(--primary-color);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* --- RESPONSIVE / PWA --- */
+@media (max-width: 480px) {
+  .container {
+    background-color: white; /* En móvil, quitamos el fondo gris */
+    padding: 0;
+    align-items: flex-start; /* Contenido arriba */
+  }
+
+  .card {
+    box-shadow: none; /* Diseño plano en móvil */
+    padding: 2rem 1.5rem;
+    border-radius: 0;
+    height: 100vh; /* Ocupa toda la altura */
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+}

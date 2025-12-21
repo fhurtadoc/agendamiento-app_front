@@ -1,0 +1,123 @@
+.container {
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.backBtn {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.serviceInfo {
+  text-align: right;
+  font-size: 0.9rem;
+  color: #444;
+}
+
+/* Date Selector */
+.dateSelector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f9fafb;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+}
+
+.dateDisplay {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.dayName {
+  font-size: 0.9rem;
+  text-transform: capitalize;
+  color: #6b7280;
+}
+
+.fullDate {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.navBtn {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  color: #4b5563;
+  transition: all 0.2s;
+}
+
+.navBtn:hover {
+  background-color: #4c40e6;
+  color: white;
+  border-color: #4c40e6;
+}
+
+/* Grilla de Slots */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 3 columnas en móvil */
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(5, 1fr); /* 5 columnas en PC */
+  }
+}
+
+.slotBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  color: #1f2937;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.slotBtn:hover {
+  border-color: #4c40e6;
+  color: #4c40e6;
+  background-color: #f5f3ff;
+  transform: scale(1.05);
+}
+
+/* Estados */
+.loading, .empty, .error {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+  background: #f9fafb;
+  border-radius: 12px;
+}
+
+.error { color: #ef4444; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

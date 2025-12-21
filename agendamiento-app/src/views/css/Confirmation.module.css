@@ -1,0 +1,149 @@
+.container {
+  animation: fadeIn 0.4s ease-out;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.title {
+  text-align: center;
+  color: #1f2937;
+  margin-bottom: 25px;
+}
+
+.summaryCard {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.iconBox {
+  background-color: #f3f4f6;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4c40e6;
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  font-size: 0.85rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.value {
+  font-size: 1.1rem;
+  color: #111827;
+  margin-bottom: 4px;
+  text-transform: capitalize;
+}
+
+.subtext {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.timeTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #eff6ff;
+  color: #2563eb;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 5px;
+  width: fit-content;
+}
+
+.divider {
+  height: 1px;
+  background-color: #f3f4f6;
+  margin: 20px 0;
+}
+
+.note {
+  margin-top: 20px;
+  background-color: #fffbeb;
+  border: 1px solid #fcd34d;
+  color: #b45309;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  display: flex;
+  gap: 10px;
+  align-items: start;
+}
+
+.note p { margin: 0; }
+
+/* ACCIONES */
+.actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.backBtn {
+  flex: 1;
+  padding: 14px;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #374151;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.backBtn:hover { background-color: #f9fafb; }
+
+.confirmBtn {
+  flex: 2;
+  padding: 14px;
+  background-color: #4c40e6;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(76, 64, 230, 0.3);
+}
+
+.confirmBtn:hover {
+  background-color: #4338ca;
+  transform: translateY(-1px);
+}
+
+.confirmBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

@@ -1,0 +1,91 @@
+/* Layout.css */
+
+/* --- 1. CONFIGURACIÓN BASE (MÓVIL PRIMERO) --- */
+.layout-container {
+  display: flex;
+  flex-direction: column; /* En móvil, los elementos van uno debajo del otro */
+  height: 100vh;
+  background-color: #f5f5f5;
+  /* Aquí usamos las variables que inyectaremos desde React */
+}
+
+/* El área donde se renderizan tus Vistas */
+.main-content {
+  flex: 1; /* Ocupa todo el espacio disponible */
+  overflow-y: auto; /* Permite scrollear el contenido */
+  padding: 1rem;
+  padding-bottom: 80px; /* IMPORTANTE: Espacio para que la barra de abajo no tape el final */
+}
+
+/* La Barra de Navegación (Estilo Móvil / Bottom Bar) */
+.navigation-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background-color: var(--primary-color); /* Color dinámico del Backend */
+  color: white;
+  display: flex;
+  justify-content: space-around; /* Distribuye los iconos */
+  align-items: center;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+  z-index: 1000;
+}
+
+/* El Logo (Oculto en la barra inferior móvil para ahorrar espacio) */
+.nav-logo {
+  display: none;
+}
+
+.nav-item {
+  background: none;
+  border: none;
+  color: white; /* O var(--text-color-on-primary) */
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+/* --- 2. CONFIGURACIÓN WEB / TABLET (DESKTOP) --- */
+/* Esta regla se activa solo si la pantalla es mayor a 768px */
+@media (min-width: 768px) {
+  
+  .layout-container {
+    flex-direction: row; /* CAMBIO CLAVE: Ahora los elementos van lado a lado */
+  }
+
+  .main-content {
+    padding-bottom: 1rem; /* Ya no necesitamos el espacio extra abajo */
+  }
+
+  /* Transformamos la barra inferior en una Barra Lateral (Sidebar) */
+  .navigation-bar {
+    position: relative; /* Ya no flota */
+    width: 250px;       /* Ancho fijo lateral */
+    height: 100vh;      /* Altura completa */
+    flex-direction: column; /* Items uno debajo del otro */
+    justify-content: flex-start; /* Alineados arriba */
+    padding-top: 2rem;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+  }
+
+  /* Ahora sí mostramos el logo grande arriba */
+  .nav-logo {
+    display: block;
+    width: 80%;
+    max-width: 150px;
+    margin-bottom: 2rem;
+    border-radius: 8px;
+  }
+
+  .nav-item {
+    width: 100%;
+    padding: 15px 20px;
+    text-align: left;
+    transition: background 0.3s;
+  }
+  
+  .nav-item:hover {
+    background-color: rgba(255,255,255, 0.1);
+  }
+}

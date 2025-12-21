@@ -1,0 +1,104 @@
+/* src/views/css/Profile.module.css */
+
+.container {
+  padding: 1.5rem;
+  max-width: 600px; /* IMPORTANTE: En PC se verá centrado y elegante */
+  margin: 0 auto;   /* Centra el contenedor horizontalmente */
+  width: 100%;
+}
+
+/* --- CABECERA DEL PERFIL --- */
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.avatar {
+  width: 100px;
+  height: 100px;
+  background-color: var(--primary-color, #4F46E5); /* Usa tu color primario */
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  border: 4px solid white; /* Borde blanco para resaltar */
+}
+
+.userName {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.userEmail {
+  color: #6b7280;
+  margin-top: 0.25rem;
+  font-size: 0.95rem;
+}
+
+/* --- MENU DE OPCIONES --- */
+.menuGroup {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  overflow: hidden; /* Para que los hijos respeten los bordes redondeados */
+  margin-bottom: 1.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.menuItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: white;
+  border: none;
+  border-bottom: 1px solid #f3f4f6;
+  text-align: left;
+  font-size: 1rem;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.menuItem:last-child {
+  border-bottom: none;
+}
+
+.menuItem:hover {
+  background-color: #f9fafb;
+}
+
+/* Iconos dentro de los botones */
+.icon {
+  margin-right: 1rem;
+  color: #9ca3af;
+  width: 20px;
+  height: 20px;
+}
+
+/* Flecha derecha (Chevron) */
+.chevron {
+  margin-left: auto; /* Empuja la flecha a la derecha del todo */
+  color: #d1d5db;
+  width: 18px;
+}
+
+/* --- BOTÓN CERRAR SESIÓN --- */
+.logoutButton {
+  color: #ef4444 !important; /* Rojo peligro */
+  font-weight: 500;
+}
+
+.logoutButton .icon {
+  color: #ef4444;
+}
