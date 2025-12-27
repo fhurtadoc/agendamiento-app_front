@@ -161,7 +161,9 @@
     "menu_dashboard": "Dashboard",
     "menu_calendar": "Master Schedule",
     "menu_settings": "Settings",
-    "logout_system": "Exit System"
+    "logout_system": "Exit System",
+    "create_button":"Create new employee"
+
   },
   "navigation": {
     "home": "Home",

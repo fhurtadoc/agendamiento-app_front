@@ -1,26 +1,44 @@
 import { supabase } from '../services/supabaseClient';
 
 export const authAdapter = {
-
- /**
-   * Inicia sesión con correo y contraseña.
+  /**
+   * Logs in with email and password.
    */
- login: async (email, password) => {
+  login: async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    // AQUÍ es donde el adaptador normaliza la respuesta
+    // Adapter normalizes the response
     if (error) {
-      throw new Error(error.message); // Convertimos el error de Supabase en un Error nativo JS
+      throw new Error(error.message); // Convert Supabase error to native JS Error
     }
     
-    // Retornamos solo la data útil, sin envoltorios
+    // Return only useful data
     return data; 
   },
 
- logout: async () => {
+  /**
+   * Registers a new user.
+   */
+  signUp: async (email, password, options) => {
+    console.log(options);
+    
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options,
+    });
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  /**
+   * Logs out the current user.
+   */
+  logout: async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
       throw new Error(error.message);
@@ -29,7 +47,7 @@ export const authAdapter = {
   },
 
   /**
-   * Obtiene la sesión actual del proveedor.
+   * Gets the current session from the provider.
    */
   getSession: async () => {
     const { data, error } = await supabase.auth.getSession();
@@ -38,7 +56,16 @@ export const authAdapter = {
   },
 
   /**
-   * Obtiene el rol del usuario desde la tabla personalizada 'profiles'.
+   * Gets the current user object directly.
+   */
+  getUser: async () => {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    return user;
+  },
+
+  /**
+   * Fetches the user role from the custom 'profiles' table.
    */
   getUserRole: async (userId) => {
     const { data, error } = await supabase
@@ -47,7 +74,7 @@ export const authAdapter = {
       .eq('id', userId)
       .single();
     
-    // Si no encuentra perfil o hay error, retornamos null (el servicio decidirá el default)
+    // If no profile found or error, return null (service handles default)
     if (error) {
         console.warn("Error fetching role or no profile found", error);
         return null; 
@@ -56,17 +83,18 @@ export const authAdapter = {
   },
 
   /**
-   * Suscribe a los cambios de estado (Login/Logout/TokenRefresh).
-   * Retorna la función para desuscribirse.
+   * Sends a password reset email.
    */
-  onAuthStateChange: (callback) => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(callback);
-    return () => subscription.unsubscribe();
+  resetPasswordForEmail: async (email, redirectTo) => {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo,
+    });
+    if (error) throw new Error(error.message);
+    return data;
   },
 
   /**
    * Updates the authenticated user's password in Supabase.
-   * @param {string} newPassword 
    */
   updatePassword: async (newPassword) => {
     const { data, error } = await supabase.auth.updateUser({ 
@@ -74,15 +102,26 @@ export const authAdapter = {
     });
 
     if (error) {
-      // Throw a standardized error message
       throw new Error(error.message);
     }
-    
     return data;
   },
+
+  /**
+   * General user update.
+   */
   updateUser: async (attributes) => {
     const { data, error } = await supabase.auth.updateUser(attributes);
     if (error) throw new Error(error.message);
     return data;
-  }
+  },
+
+  /**
+   * Subscribes to auth state changes (Login/Logout/TokenRefresh).
+   * Returns the unsubscribe function.
+   */
+  onAuthStateChange: (callback) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(callback);
+    return () => subscription.unsubscribe();
+  },
 };

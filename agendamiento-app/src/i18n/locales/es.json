@@ -161,7 +161,8 @@
     "menu_dashboard": "Dashboard",
     "menu_calendar": "Agenda Maestra",
     "menu_settings": "Configuración",
-    "logout_system": "Salir del Sistema"
+    "logout_system": "Salir del Sistema",
+    "create_button":"Crear empleado"
   },
   "navigation": {
     "home": "Inicio",

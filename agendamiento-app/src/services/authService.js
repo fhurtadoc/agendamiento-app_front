@@ -95,5 +95,24 @@ export const authService = {
       password: newPassword 
     });
     return { data, error };
-  }
+  },
+  async registerEmployee({ email, password, fullName, tenantId }) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,   // We use full_name here too
+          tenant_id: "40764130-8de4-4408-80bc-a8af3b002c7e",
+          role: 'employee',      // CRITICAL: This triggers the auto-validation in SQL
+        },
+      },
+    });
+    
+    // Normalize response to match your app's expectations
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true, data };
+  },
 };

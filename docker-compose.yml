@@ -4,12 +4,13 @@ services:
   frontend:
     container_name: mi-saas-frontend
     build:
-      context: ./agendamiento-app  # Nombre de tu carpeta del proyecto
+      context: ./agendamiento-app
       dockerfile: Dockerfile
-      # --- AQUÍ PASAMOS LAS VARIABLES AL BUILD ---
+      # FIX: Pass variables from local .env to Dockerfile ARGs during build
       args:
-        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
-        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+        - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+        - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+        - VITE_KEY_TENANTS=${VITE_KEY_TENANTS} 
     ports:
       - "80:80"
     restart: always

@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next'; // <--- Import i18n hook
+import { useTranslation } from 'react-i18next'; 
 import { authService } from '../services/authService';
 import { useTenant } from '../context/TenantContext';
 import styles from './css/LoginView.module.css';
 
 export default function LoginView() {
-  const { t } = useTranslation(); // <--- Init hook
+  const { t } = useTranslation(); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -71,7 +71,6 @@ export default function LoginView() {
               type="email"
               required
               className={styles.input}
-              // Reusing the label from register view as placeholder
               placeholder={t('auth.email_label')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -83,7 +82,6 @@ export default function LoginView() {
               type="password"
               required
               className={styles.input}
-              // Reusing the label from register view as placeholder
               placeholder={t('auth.password_label')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -99,7 +97,6 @@ export default function LoginView() {
           </div>
 
           <button type="submit" disabled={loading} className={styles.button}>
-            {/* Reusing common.loading and auth.login_button */}
             {loading ? t('common.loading') : t('auth.login_button')}
           </button>
         </form>

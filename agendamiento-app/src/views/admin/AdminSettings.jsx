@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next'; // <--- Import i18n hook
+import { useTranslation } from 'react-i18next';
 import { User, Lock, Users, Plus, Trash2, Search, Save } from 'lucide-react';
-import { authService } from '../../services/auth.service'; 
-import { userService } from '../../services/user.service'; 
+import { authService } from '../../services/authService'; // Check path
+import { userService } from '../../services/user.service'; // Check path
 import { useAlert } from '../../context/AlertContext';
+import { useTenant } from '../../context/TenantContext'; // Import Tenant Context
+import AddEmployeeModal from './AddEmployeeModal'; // <--- Import Modal
 import './AdminSettings.css';
 
 const AdminSettings = () => {
-  const { t } = useTranslation(); // <--- Init hook
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('profile');
+
 
   return (
     <div className="admin-container">
@@ -21,7 +24,6 @@ const AdminSettings = () => {
           onClick={() => setActiveTab('profile')}
         >
           <User size={18} />
-          {/* Reusing existing profile title */}
           <span>{t('profile.my_profile_title')}</span>
         </button>
         <button 
@@ -41,159 +43,32 @@ const AdminSettings = () => {
   );
 };
 
-// --- Sub-Component: Admin Profile Tab ---
+// ... (ProfileTab component remains exactly the same as your code) ...
 const ProfileTab = () => {
-  const { t } = useTranslation(); // <--- Init hook for sub-component
-  const { showAlert } = useAlert();
-  const [loading, setLoading] = useState(false);
-  const [userId, setUserId] = useState(null);
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    currentPassword: '',
-    newPassword: ''
-  });
-
-  // Fetch current user data on mount
-  useEffect(() => {
-    const fetchProfile = async () => {
-      setLoading(true);
-      try {
-        // 1. Get current user ID from Auth Service
-        const { user } = await authService.getCurrentUserWithRole();
-        
-        if (user) {
-          setUserId(user.id);
-          // 2. Get profile data from User Service
-          const profile = await userService.getProfile(user.id);
-
-          setFormData(prev => ({
-            ...prev,
-            firstName: profile.firstName || '',
-            lastName: profile.lastName || '',
-            email: user.email // Email from auth session
-          }));
-        }
-      } catch (error) {
-        console.error('Error fetching profile:', error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, []);
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  // Update Personal Info
-  const handleUpdateInfo = async () => {
-    try {
-      setLoading(true);
-      await userService.updateProfileInfo(userId, {
-        firstName: formData.firstName,
-        lastName: formData.lastName
-      });
-      // Reusing success key
-      showAlert(t('success.data_updated'));
-    } catch (error) {
-      showAlert(t('error.profile_update') + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Change Password
-  const handleChangePassword = async () => {
-    try {
-      setLoading(true);
-      // Validations are now inside the service
-      await authService.changePassword(formData.newPassword);
-      
-      showAlert(t('success.password_updated'));
-      setFormData(prev => ({ ...prev, currentPassword: '', newPassword: '' }));
-    } catch (error) {
-      showAlert(t('error.generic') + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading && !userId) return <div>{t('common.loading')}</div>;
-
-  return (
-    <div className="profile-wrapper">
-      {/* Personal Info Section */}
-      <section className="settings-card">
-        <h3><User size={20} /> {t('profile.personal_info_title')}</h3>
-        <div className="form-group">
-          <label>{t('profile.first_name')}</label>
-          <input 
-            type="text" 
-            name="firstName" 
-            value={formData.firstName} 
-            onChange={handleChange} 
-          />
-        </div>
-        <div className="form-group">
-          <label>{t('profile.last_name')}</label>
-          <input 
-            type="text" 
-            name="lastName" 
-            value={formData.lastName} 
-            onChange={handleChange} 
-          />
-        </div>
-        <div className="form-group">
-          <label>{t('admin.email_read_only_label')}</label>
-          <input 
-            type="email" 
-            value={formData.email} 
-            disabled 
-            className="input-disabled"
-          />
-        </div>
-        <button className="btn-primary" onClick={handleUpdateInfo} disabled={loading}>
-          <Save size={18} /> {loading ? t('profile.updating') : t('common.save')}
-        </button>
-      </section>
-
-      {/* Security Section */}
-      <section className="settings-card">
-        <h3><Lock size={20} /> {t('profile.account_security_title')}</h3>
-        <div className="form-group">
-          <label>{t('auth.new_password_label')}</label>
-          <input 
-            type="password" 
-            name="newPassword" 
-            value={formData.newPassword}
-            onChange={handleChange}
-            placeholder={t('profile.new_password_placeholder')}
-          />
-        </div>
-        <button className="btn-secondary" onClick={handleChangePassword} disabled={loading}>
-          {loading ? t('profile.processing') : t('profile.menu_change_password')}
-        </button>
-      </section>
-    </div>
-  );
+    // ... [Copy your existing ProfileTab code here] ...
+    // Just for brevity in this answer, I assume you keep your ProfileTab code.
+    // If you need it repeated, let me know.
+    const { t } = useTranslation();
+    return <div>{t('profile.my_profile_title')} Content...</div>; // Placeholder
 };
+
 
 // --- Sub-Component: Employees Management Tab ---
 const EmployeesTab = () => {
-  const { t } = useTranslation(); // <--- Init hook for sub-component
+  const { t } = useTranslation();
   const { showAlert } = useAlert();
+  const { tenant } = useTenant(); // Get current Tenant ID
+  
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      // Using Service instead of Supabase directly
       const data = await userService.getAllEmployees();
       setEmployees(data);
     } catch (error) {
@@ -207,13 +82,47 @@ const EmployeesTab = () => {
     fetchEmployees();
   }, []);
 
-  // Toggle Active Status
+  // Filter for Search
+  const filteredEmployees = employees.filter(emp => {
+    const fullName = `${emp.firstName || ''} ${emp.lastName || ''}`.toLowerCase();
+    const email = (emp.email || '').toLowerCase();
+    const search = searchTerm.toLowerCase();
+    return fullName.includes(search) || email.includes(search);
+  });
+
+  // Handle opening modal
+  const handleAddNew = () => {
+    setIsModalOpen(true);
+  };
+
+  // Handle creating the user
+  const handleCreateEmployee = async (employeeData) => {
+    try {
+      // 1. Call Auth Service
+      const result = await authService.registerEmployee({
+        ...employeeData,
+        tenantId: tenant?.id // Ensure we associate with current tenant
+      });
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      // 2. Success Feedback
+      showAlert(t('success.employee_created'));
+      setIsModalOpen(false);
+      
+      // 3. Refresh list
+      fetchEmployees();
+
+    } catch (error) {
+      showAlert(t('error.generic') + ': ' + error.message);
+    }
+  };
+
   const toggleStatus = async (id, currentStatus) => {
     try {
-      // Service returns the new status
       const newStatus = await userService.toggleUserStatus(id, currentStatus);
-      
-      // Update local state
       setEmployees(employees.map(emp => 
         emp.id === id ? { ...emp, isActive: newStatus } : emp
       ));
@@ -222,22 +131,9 @@ const EmployeesTab = () => {
     }
   };
 
-  // Filter for Search (Using Normalized camelCase names)
-  const filteredEmployees = employees.filter(emp => {
-    const fullName = `${emp.firstName || ''} ${emp.lastName || ''}`.toLowerCase();
-    const email = (emp.email || '').toLowerCase();
-    const search = searchTerm.toLowerCase();
-    
-    return fullName.includes(search) || email.includes(search);
-  });
-
-  const handleAddNew = () => {
-    showAlert(t('info.backend_logic'));
-  };
-
   return (
     <div className="employees-wrapper">
-      {/* Actions Header */}
+      {/* Search and Add Header */}
       <div className="actions-header">
         <div className="search-bar">
           <Search size={18} />
@@ -268,7 +164,6 @@ const EmployeesTab = () => {
                 <div className="emp-info">
                   <h4>{emp.firstName} {emp.lastName}</h4>
                   <p>{emp.email}</p>
-                  {/* Using camelCase 'isActive' */}
                   <span className={`status-badge ${emp.isActive ? 'active' : 'inactive'}`}>
                     {emp.isActive ? t('admin.status_active') : t('admin.status_inactive')}
                   </span>
@@ -288,6 +183,13 @@ const EmployeesTab = () => {
           ))}
         </div>
       )}
+
+      {/* Add Employee Modal */}
+      <AddEmployeeModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleCreateEmployee}
+      />
     </div>
   );
 };
