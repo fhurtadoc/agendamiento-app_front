@@ -57,7 +57,7 @@ const ProfileTab = () => {
 const EmployeesTab = () => {
   const { t } = useTranslation();
   const { showAlert } = useAlert();
-  const { tenant } = useTenant(); // Get current Tenant ID
+  const  tenant  = useTenant(); // Get current Tenant ID
   
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -101,7 +101,7 @@ const EmployeesTab = () => {
       // 1. Call Auth Service
       const result = await authService.registerEmployee({
         ...employeeData,
-        tenantId: tenant?.id // Ensure we associate with current tenant
+        tenantId: tenant.id // Ensure we associate with current tenant
       });
 
       if (!result.success) {
