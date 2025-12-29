@@ -10,14 +10,21 @@ export default function EmployeeLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = async () => {
-    try {
-      // Use service. If it fails, it hits the catch block.
-      await authService.logout();
-      navigate('/login');
+ const handleLogout = async () => { 
+    const TIMEOUT_MS = 1000;
+    try {      
+      const logoutPromise = authService.logout();      
+      const timeoutPromise = new Promise((resolve) => {
+        setTimeout(() => {
+          resolve("tiempo_agotado");
+        }, TIMEOUT_MS);
+      });      
+      await Promise.race([logoutPromise, timeoutPromise]);
+
     } catch (error) {
-      console.error("Error signing out", error);
-      // Optional: Show a toast/alert to the user if it fails
+      console.warn("Error o timeout en logout:", error);
+    } finally {      
+      window.location.href = '/login';
     }
   };
 

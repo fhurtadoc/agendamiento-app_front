@@ -7,12 +7,23 @@ export default function AdminLayout() {
   const { t } = useTranslation(); // <--- Init hook
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    try {
-      await authService.logout();
-      navigate('/login');
+ // En ChangePasswordView.jsx
+
+  const handleLogout = async () => { 
+    const TIMEOUT_MS = 1000;
+    try {      
+      const logoutPromise = authService.logout();      
+      const timeoutPromise = new Promise((resolve) => {
+        setTimeout(() => {
+          resolve("tiempo_agotado");
+        }, TIMEOUT_MS);
+      });      
+      await Promise.race([logoutPromise, timeoutPromise]);
+
     } catch (error) {
-      console.error("Error signing out", error);
+      console.warn("Error o timeout en logout:", error);
+    } finally {      
+      window.location.href = '/login';
     }
   };
 

@@ -20,35 +20,40 @@ export default function LoginView() {
     setLoading(true);
     setError('');
 
-    // 1. Attempt to log in
-    const { success, error: loginError } = await authService.login(email, password);  
+    // 1. CORRECCIÓN: Extraemos el 'user' directamente de la respuesta del login
+    const { success, user, error: loginError } = await authService.login(email, password);  
+    
     if (loginError) console.log(loginError);
 
     if (!success) {
       setError(t('auth.invalid_credentials'));
       setLoading(false);
     } else {
-      // 2. If login is successful, ask the service who the user is
       try {
-        const { role } = await authService.getCurrentUserWithRole();
+        // 2. CORRECCIÓN: Le pasamos el 'user' a la función para que no tenga que buscarlo
+        const { role, requiresPasswordChange } = await authService.getCurrentUserWithRole(user);
 
         console.log('User role:', role);
+        console.log('Requires Password Change:', requiresPasswordChange);
 
-        // 3. Redirection based on service response
+        if (requiresPasswordChange===true) {
+          console.log('hola desde Requires Password Change');
+          
+           navigate('/cambiar-password'); 
+           return; 
+        }
+
         if (role === 'admin') {
           navigate('/admin/dashboard');
         } else if (role === 'employee' || role === 'empleado') { 
-          // Note: Ensure DB role matches one of these strings
           navigate('/empleado/home');
         } else {
-          // Client or unknown role
           navigate('/');
         }
       } catch (err) {
         console.error("Error in post-login redirection:", err);
         navigate('/');
       }
-      // We don't set loading(false) because we are navigating away
     }
   };
 
@@ -60,7 +65,6 @@ export default function LoginView() {
           {tenant?.theme?.logoUrl && (
             <img src={tenant.theme.logoUrl} alt="Logo" className={styles.logo} />
           )}
-          {/* Reusing common.welcome as fallback */}
           <h2 className={styles.title}>{tenant?.name || t('common.welcome')}</h2>
           <p className={styles.subtitle}>{t('auth.login_subtitle')}</p>
         </div>

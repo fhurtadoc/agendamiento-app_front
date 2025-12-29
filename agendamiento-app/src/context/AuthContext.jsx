@@ -1,19 +1,20 @@
 import { createContext, useState, useEffect, useContext } from 'react';
-import { authService } from '../services/auth.service';
-import i18n from '../i18n'; // Import your i18n configuration
+import { authService } from '../services/authService'; // Asegúrate que el nombre del archivo coincida
+import i18n from '../i18n'; 
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
+  // 1. NUEVO ESTADO: Bandera de seguridad
+  const [requiresPasswordChange, setRequiresPasswordChange] = useState(false); // <--- NUEVO
   const [loading, setLoading] = useState(true);
 
   // Helper: Syncs the app language with the user's preference
   const handleLanguageSync = (userLanguage) => {
     if (userLanguage) {
       i18n.changeLanguage(userLanguage);
-      // Persist to localStorage to keep it if the user refreshes
       localStorage.setItem('app_language', userLanguage);
     }
   };
@@ -22,11 +23,13 @@ export const AuthProvider = ({ children }) => {
     // 1. Initial Load
     const initAuth = async () => {
       try {
-        // We assume authService now retrieves { user, role, language }
-        const { user, role, language } = await authService.getCurrentUserWithRole();
+        // 2. MODIFICADO: Recuperamos también 'requiresPasswordChange' del servicio
+        const { user, role, language, requiresPasswordChange } = await authService.getCurrentUserWithRole(); // <--- UPDATE
         
         setUser(user);
         setRole(role);
+        // 3. ACTUALIZAR ESTADO
+        setRequiresPasswordChange(requiresPasswordChange || false); // <--- NUEVO
         
         // Apply the language from the database
         handleLanguageSync(language);
@@ -40,13 +43,15 @@ export const AuthProvider = ({ children }) => {
 
     initAuth();
 
-    // 2. Subscription to events (Dynamic Login/Logout)
-    // The service returns the 'unsubscribe' function
+    // 2. Subscription to events
     const unsubscribe = authService.subscribeToChanges((data) => {
       setUser(data.user);
       setRole(data.role);
       
-      // If we receive language data on login/change, apply it
+      // 4. ACTUALIZAR ESTADO EN CAMBIOS (Login/Logout dinámico)
+      // Asegúrate que tu servicio envíe este dato en el evento
+      setRequiresPasswordChange(data.requiresPasswordChange || false); // <--- NUEVO
+      
       if (data.language) {
         handleLanguageSync(data.language);
       }
@@ -63,7 +68,8 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, role, loading }}>
+    // 5. EXPONER LA VARIABLE AL APP
+    <AuthContext.Provider value={{ user, role, requiresPasswordChange, loading }}> 
       {!loading && children}
     </AuthContext.Provider>
   );

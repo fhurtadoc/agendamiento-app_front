@@ -36,8 +36,22 @@ export default function HomeView() {
     fetchData();
   }, [user]);
 
-  const handleLogout = async () => {
-    await authService.logout();
+ const handleLogout = async () => { 
+    const TIMEOUT_MS = 1000;
+    try {      
+      const logoutPromise = authService.logout();      
+      const timeoutPromise = new Promise((resolve) => {
+        setTimeout(() => {
+          resolve("tiempo_agotado");
+        }, TIMEOUT_MS);
+      });      
+      await Promise.race([logoutPromise, timeoutPromise]);
+
+    } catch (error) {
+      console.warn("Error o timeout en logout:", error);
+    } finally {      
+      window.location.href = '/login';
+    }
   };
 
   // Helper to format date (you can use date-fns if you prefer)
