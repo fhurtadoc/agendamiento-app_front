@@ -162,7 +162,9 @@
     "menu_calendar": "Agenda Maestra",
     "menu_settings": "Configuración",
     "logout_system": "Salir del Sistema",
-    "create_button":"Crear empleado"
+    "create_button":"Crear empleado",
+    "menu_services":"Services"
+
   },
   "navigation": {
     "home": "Inicio",
@@ -194,6 +196,13 @@
     "confirm_delete": "¿Estás seguro de eliminar este bloqueo?",
     "error_fetching": "Error al cargar horarios.",
     "schedule":"Horarios"
-  }
+  },
+  "services": {
+  "create_title": "Crear Nuevo Servicio",
+  "name_label": "Nombre del Servicio",
+  "duration_label": "Duración Estimada",
+  "price_label": "Precio ($)",
+  "create_success": "¡Servicio creado correctamente!"
+}
 
 }

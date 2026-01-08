@@ -1,13 +1,11 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next'; // <--- Import i18n hook
-import { authService } from '../../services/auth.service'; 
+import { useTranslation } from 'react-i18next';
+import { authService } from '../../services/authService'; // Asegúrate que el nombre del archivo sea correcto
 import styles from './AdminLayout.module.css';
 
 export default function AdminLayout() {
-  const { t } = useTranslation(); // <--- Init hook
+  const { t } = useTranslation();
   const navigate = useNavigate();
-
- // En ChangePasswordView.jsx
 
   const handleLogout = async () => { 
     const TIMEOUT_MS = 1000;
@@ -42,19 +40,23 @@ export default function AdminLayout() {
             <span>📊</span> {t('admin.menu_dashboard')}
           </Link>
 
-          {/* --- NEW LINK: MASTER CALENDAR --- */}
           <Link to="/admin/calendar" className={styles.navLink}>
             <span>📅</span> {t('admin.menu_calendar')}
           </Link>
-          {/* ------------------------------------ */}
+
+          {/* --- NUEVO LINK: SERVICIOS --- */}
+          <Link to="/admin/services/new" className={styles.navLink}>
+             <span>✂️</span> {t('admin.menu_services')}
+          </Link>
+          {/* ----------------------------- */}
           
+          <Link to="/admin/schedule" className={styles.navLink}>
+            <span>🕒</span> {t('schedule.schedule')} 
+          </Link>
+
           <Link to="/admin/settings" className={styles.navLink}>
             <span>⚙️</span> {t('admin.menu_settings')}
           </Link>
-
-          <Link to="/admin/schedule" className={styles.navLink}><span>🕒</span>  {t('schedule.schedule')} </Link>
-
-          
 
         </nav>
 

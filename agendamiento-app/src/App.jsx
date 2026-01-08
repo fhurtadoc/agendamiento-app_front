@@ -29,6 +29,7 @@ import DashboardAdminView from './views/admin/DashboardAdminView';
 import AdminSettings from "./views/admin/AdminSettings";
 import { AdminCalendarView } from './views/admin/AdminCalendarView';
 import AdminScheduleView from './views/admin/AdminScheduleView';
+import { CreateServiceView } from './views/admin/CreateServiceView';
 
 // --- LAYOUTS ---
 import Layout from './components/Layout/Layoutview';          // Client
@@ -133,6 +134,7 @@ function App() {
                 <Route path="calendar" element={<AdminCalendarView />} />
                 <Route path="schedule" element={<AdminScheduleView />} />
                 <Route path="settings" element={<AdminSettings />} />
+                <Route path="services/new" element={<CreateServiceView />} />
             </Route>
         </Route>
 

@@ -162,7 +162,8 @@
     "menu_calendar": "Master Schedule",
     "menu_settings": "Settings",
     "logout_system": "Exit System",
-    "create_button":"Create new employee"
+    "create_button":"Create new employee",
+    "menu_services":"Services"
 
   },
   "navigation": {
@@ -195,5 +196,12 @@
     "confirm_delete": "Are you sure you want to remove this block?",
     "error_fetching": "Error loading schedules.",
     "schedule":"schedule"
-  }
+  },
+  "services": {
+  "create_title": "Create New Service",
+  "name_label": "Service Name",
+  "duration_label": "Estimated Duration",
+  "price_label": "Price ($)",
+  "create_success": "Service created successfully!"
+}
 }
