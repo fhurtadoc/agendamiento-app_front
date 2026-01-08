@@ -196,3 +196,102 @@
   color: #666;
   margin-bottom: 4px;
 }
+/* CalendarWidget.css */
+
+/* --- Estilos Generales --- */
+.rbc-calendar {
+    font-family: 'Inter', sans-serif; /* O tu fuente preferida */
+}
+
+.rbc-event {
+    border-radius: 4px;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: none !important; /* Quitar borde default feo */
+}
+
+/* Evento "Pending" (ejemplo visual) */
+.rbc-event.pending-status {
+    border-left: 4px solid #d97706;
+}
+
+/* --- RESPONSIVE TOOLBAR (Estilo Google Calendar Mobile) --- */
+@media (max-width: 768px) {
+    
+    /* 1. Reorganizar la Toolbar */
+    .rbc-toolbar {
+        flex-direction: column-reverse; /* Pone los botones de vista abajo y navegación arriba, o al revés según gusto */
+        gap: 10px;
+        margin-bottom: 15px !important;
+        padding: 10px;
+    }
+
+    /* 2. El título de la fecha dentro del calendario (ej: "Diciembre 2024") */
+    .rbc-toolbar-label {
+        font-size: 1.2rem;
+        font-weight: bold;
+        width: 100%;
+        text-align: center;
+        margin: 5px 0 !important;
+    }
+
+    /* 3. Grupos de Botones (Today/Back/Next y Month/Week/Day) */
+    .rbc-btn-group {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    .rbc-btn-group button {
+        flex: 1; /* Botones ocupan todo el ancho disponible */
+        padding: 8px 0; /* Zona táctil más grande */
+        font-size: 0.9rem;
+    }
+
+    /* 4. Cabecera de los días (Lun, Mar, Mie...) */
+    .rbc-header {
+        font-size: 0.8rem;
+        padding: 5px 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* 5. Columna de horas (lado izquierdo) */
+    .rbc-time-gutter .rbc-timeslot-group {
+        padding: 0 2px;
+        font-size: 0.75rem; /* Hora más pequeña para ganar espacio */
+        width: 40px !important; /* Forzar ancho fijo pequeño */
+    }
+    
+    .rbc-time-view .rbc-time-gutter {
+        width: 45px !important; /* Ajustar contenedor de la hora */
+    }
+
+    /* 6. Ajustar eventos en vista Day/Week mobile */
+    .rbc-event-content {
+        font-size: 0.75rem; /* Texto interno pequeño */
+        white-space: normal; /* Permitir saltos de línea si es necesario */
+        line-height: 1.1;
+    }
+}
+
+/* --- Mejoras visuales generales (Desktop y Mobile) --- */
+
+/* Hover en celdas */
+.rbc-day-bg:hover {
+    background-color: #f8fafc;
+}
+
+/* Día actual */
+.rbc-today {
+    background-color: #eff6ff !important; /* Azul muy claro */
+}
+
+/* Líneas de hora */
+.rbc-time-header-content {
+    border-left: 1px solid #e2e8f0 !important;
+}
+
+.rbc-timeslot-group {
+    border-bottom: 1px solid #f1f5f9 !important;
+}

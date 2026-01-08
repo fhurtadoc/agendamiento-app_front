@@ -87,3 +87,204 @@
   margin: 10px 10px 10px 0; /* Creates that "card" effect */
   overflow-y: auto;
 }
+/* src/layouts/css/AdminLayout.module.css */
+
+.container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #1e293b; 
+}
+
+/* ================= DESKTOP STYLES ================= */
+
+.sidebar {
+  width: 260px;
+  background-color: #0f172a;
+  padding: 20px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #334155;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+.sidebarHeader {
+  margin-bottom: 30px;
+}
+
+.sidebarTitle {
+  color: var(--primary-color, #38bdf8);
+  letter-spacing: 1px;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 1.2rem;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.navLink {
+  text-decoration: none;
+  color: #94a3b8;
+  font-size: 15px;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.navLink:hover, .activeLink {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: white;
+  border-left-color: var(--primary-color, #38bdf8);
+}
+
+.logoutContainer {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid #334155;
+}
+
+.logoutButton {
+  background: transparent;
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  width: 100%;
+  font-weight: 500;
+  transition: background 0.3s;
+}
+
+.logoutButton:hover {
+  background-color: #ef4444;
+  color: white;
+}
+
+.mainContent {
+  flex: 1;
+  padding: 40px;
+  background-color: #f1f5f9;
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
+  margin: 10px 10px 10px 0;
+  overflow-y: auto;
+  min-height: calc(100vh - 20px);
+}
+
+/* Hide Mobile elements on Desktop */
+.mobileTopBar, .bottomNav {
+  display: none;
+}
+
+/* ================= MOBILE STYLES (App-like) ================= */
+@media (max-width: 768px) {
+  
+  .container {
+    flex-direction: column;
+    padding-top: 60px; /* Space for Top Bar */
+    padding-bottom: 70px; /* Space for Bottom Bar */
+  }
+
+  /* 1. Hide Desktop Sidebar */
+  .sidebar {
+    display: none;
+  }
+
+  /* 2. Main Content Adjustment */
+  .mainContent {
+    margin: 0;
+    border-radius: 0;
+    padding: 20px;
+    min-height: auto;
+    /* Remove the card effect for full mobile width */
+  }
+
+  /* 3. Mobile Top Bar (Logo + Logout) */
+  .mobileTopBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: #0f172a;
+    padding: 0 20px;
+    z-index: 50;
+    border-bottom: 1px solid #334155;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  }
+
+  .mobileTitle {
+    color: var(--primary-color, #38bdf8);
+    font-weight: bold;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+  }
+
+  .mobileLogoutBtn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 4. Bottom Navigation Bar */
+  .bottomNav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70px; /* Taller for touch targets */
+    background-color: #0f172a; /* Dark background */
+    border-top: 1px solid #334155;
+    z-index: 50;
+    padding-bottom: env(safe-area-inset-bottom); /* iOS safe area */
+  }
+
+  .mobileNavItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: #64748b; /* Inactive color */
+    font-size: 0.75rem;
+    width: 100%;
+    height: 100%;
+    gap: 4px;
+    transition: color 0.2s;
+  }
+
+  .mobileNavItem .icon {
+    font-size: 1.4rem;
+  }
+
+  /* Active State for Mobile */
+  .mobileActive {
+    color: var(--primary-color, #38bdf8); /* Active Color */
+    font-weight: bold;
+  }
+  
+  .mobileActive .icon {
+    transform: scale(1.1); /* Slight pop effect */
+    transition: transform 0.2s;
+  }
+}

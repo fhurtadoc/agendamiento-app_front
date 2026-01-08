@@ -1,0 +1,95 @@
+/* src/views/admin/AdminScheduleView.css */
+
+.schedule-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Asegura altura completa */
+    overflow: hidden; /* Evita scroll doble */
+}
+
+/* --- HEADER RESPONSIVO --- */
+.schedule-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    background-color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    gap: 15px;
+}
+
+.schedule-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.employee-selector-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.employee-select {
+    border: 1px solid #e5e7eb;
+    padding: 6px 10px;
+    border-radius: 6px;
+    min-width: 200px;
+}
+
+.schedule-add-btn {
+    white-space: nowrap; /* Que el texto del botón no se rompa */
+}
+
+/* --- MODAL RESPONSIVO --- */
+.modal-dates-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Desktop: 2 columnas */
+    gap: 10px;
+}
+
+/* --- MEDIA QUERY: MÓVIL (Menos de 768px) --- */
+@media (max-width: 768px) {
+    .schedule-container {
+        padding: 10px; /* Menos padding general */
+        height: calc(100vh - 60px); /* Ajuste si tienes BottomNav */
+    }
+
+    /* Header se vuelve columna */
+    .schedule-header {
+        flex-direction: column;
+        align-items: stretch; /* Estirar elementos al ancho completo */
+    }
+
+    .employee-selector-group {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+        width: 100%;
+    }
+
+    .employee-select {
+        width: 100%; /* Select ocupa todo el ancho */
+    }
+
+    .schedule-add-btn {
+        width: 100%; /* Botón grande y fácil de tocar */
+        justify-content: center;
+        padding: 12px;
+    }
+
+    /* Modal inputs apilados */
+    .modal-dates-grid {
+        grid-template-columns: 1fr; /* Móvil: 1 columna */
+    }
+    
+    .modal-content {
+        width: 95% !important; /* Modal casi ancho completo */
+        margin: 10px auto;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+}

@@ -1,58 +1,43 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
-  startOfMonth, 
-  endOfMonth, 
-  eachDayOfInterval, 
-  isWeekend, 
-  setHours, 
-  setMinutes,
-  format
+  startOfMonth, endOfMonth, eachDayOfInterval, isWeekend, 
+  setHours, setMinutes, format
 } from 'date-fns';
 import { timeOffService } from '../../services/timeOffService';
 import { userService } from '../../services/user.service';
 import { CalendarWidget } from '../../components/CalendarWidget';
 import { useAlert } from '../../context/AlertContext';
 import { Plus, Trash2 } from 'lucide-react';
-import '../../components/CalendarWidget.css';
+
+// IMPORTAMOS LOS CSS
+import '../../components/CalendarWidget.css'; // Estilos del calendario
+import './AdminScheduleView.css'; // <--- TUS NUEVOS ESTILOS RESPONSIVOS
 
 export default function AdminScheduleView() {
   const { t } = useTranslation();
   const { showAlert } = useAlert();
   
-  // Data State
   const [employees, setEmployees] = useState([]);
   const [timeOffRecords, setTimeOffRecords] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // Selection State
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
-
-  // --- CAMBIO 1: Aseguramos 'month' como valor inicial ---
   const [currentView, setCurrentView] = useState('month'); 
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  // Modal State
   const [showModal, setShowModal] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState(null);
   const [formData, setFormData] = useState({
-    employeeId: '',
-    start: '',
-    end: '',
-    reason: ''
+    employeeId: '', start: '', end: '', reason: ''
   });
 
-  // 1. Load Employees on Mount
+  // 1. Load Employees
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
         const empList = await userService.getAllEmployees();
         setEmployees(empList);
-        
-        // Auto-select first employee if available
-        if (empList.length > 0) {
-          setSelectedEmployeeId(empList[0].id);
-        }
+        if (empList.length > 0) setSelectedEmployeeId(empList[0].id);
       } catch (error) {
         console.error(error);
         showAlert(t('schedule.error_fetching'), 'error');
@@ -63,10 +48,9 @@ export default function AdminScheduleView() {
     fetchEmployees();
   }, []);
 
-  // 2. Load TimeOffs when Employee changes
+  // 2. Load TimeOffs
   const fetchTimeOffs = async () => {
     if (!selectedEmployeeId) return;
-    
     setLoading(true);
     try {
       const allTimeOffs = await timeOffService.getAllTimeOffs(); 
@@ -81,14 +65,12 @@ export default function AdminScheduleView() {
 
   useEffect(() => {
     fetchTimeOffs();
+    // eslint-disable-next-line
   }, [selectedEmployeeId]);
 
-
-  // 3. GENERACIÓN DE EVENTOS
+  // 3. Events Generation
   const calendarEvents = useMemo(() => {
     if (!selectedEmployeeId) return [];
-
-    // A. Generate Working Slots (Green Layer)
     const start = startOfMonth(currentDate);
     const end = endOfMonth(currentDate);
     const daysInView = eachDayOfInterval({ start, end });
@@ -96,87 +78,37 @@ export default function AdminScheduleView() {
     const workEvents = daysInView
       .filter(day => !isWeekend(day))
       .map(day => {
-        const baseProps = {
-          type: 'work',
-          resource: { type: 'work', status: 'available' }
-        };
-
+        const baseProps = { type: 'work', resource: { type: 'work', status: 'available' } };
         if (currentView === 'month') {
-          return {
-            ...baseProps,
-            id: `work-${day.toISOString()}`,
-            title: '', // Sin texto para que sea solo visual (la capa)
-            start: day,
-            end: day,
-            allDay: true 
-          };
+          return { ...baseProps, id: `work-${day.toISOString()}`, title: '', start: day, end: day, allDay: true };
         } else {
-          // Vista Día/Semana
-          return {
-            ...baseProps,
-            id: `work-shift-${day.toISOString()}`,
-            title: 'Available',
-            start: setMinutes(setHours(day, 9), 0),
-            end: setMinutes(setHours(day, 17), 0),
-            allDay: false 
-          };
+          return { ...baseProps, id: `work-shift-${day.toISOString()}`, title: 'Available', start: setMinutes(setHours(day, 9), 0), end: setMinutes(setHours(day, 17), 0), allDay: false };
         }
       });
 
-    // B. Generate Time Off Slots (Red Block)
     const restEvents = timeOffRecords.map(record => ({
       id: record.id,
       title: `🚫 ${record.reason || 'OFF'}`,
       start: new Date(record.start_time),
       end: new Date(record.end_time),
       type: 'rest',
-      resource: { ...record, type: 'time_off', employeeName: 'Employee' },
-      allDay: currentView === 'month' ? true : false
+      resource: { ...record, type: 'time_off' },
+      allDay: currentView === 'month'
     }));
 
     return [...workEvents, ...restEvents];
-
   }, [timeOffRecords, currentView, currentDate, selectedEmployeeId]);
 
-
-  // --- CAMBIO 2: Estilos para el efecto "Capa" ---
   const eventStyleGetter = (event) => {
     const isRest = event.type === 'rest';
-
     if (isRest) {
-      // Estilo para el BLOQUEO (Rojo Fuerte)
-      return {
-        style: {
-          backgroundColor: '#EF4444', // Rojo
-          opacity: 1,
-          color: 'white',
-          border: '1px solid #B91C1C',
-          borderRadius: '4px',
-          zIndex: 10 // Para que quede encima de la capa verde
-        }
-      };
+      return { style: { backgroundColor: '#EF4444', opacity: 1, color: 'white', border: '1px solid #B91C1C', borderRadius: '4px', zIndex: 10 } };
     } else {
-      // Estilo para DISPONIBLE (Capa Verde Suave)
-      return {
-        style: {
-          // Usamos RGBA para transparencia (Verde suave)
-          backgroundColor: 'rgba(16, 185, 129, 0.15)', 
-          // O si prefieres un color solido muy claro usa: '#dcfce7' (Tailwind green-100)
-          
-          color: 'transparent', // Ocultar texto si queremos solo fondo
-          border: 'none',
-          borderRadius: '0px', // Cuadrado para llenar mejor la celda
-          height: '100%',
-          pointerEvents: 'none', // Para que el click pase a través si es necesario
-          zIndex: 1 // Fondo
-        }
-      };
+      return { style: { backgroundColor: 'rgba(16, 185, 129, 0.15)', color: 'transparent', border: 'none', borderRadius: '0px', height: '100%', pointerEvents: 'none', zIndex: 1 } };
     }
   };
 
-  // 5. Handlers
   const handleSelectEvent = (event) => {
-    // Solo permitir click en eventos Rojos (Time Off)
     if (event.resource?.type === 'time_off') {
       setSelectedBlock(event);
       setShowModal(true);
@@ -185,12 +117,7 @@ export default function AdminScheduleView() {
 
   const handleCreate = () => {
     setSelectedBlock(null);
-    setFormData({ 
-      employeeId: selectedEmployeeId, 
-      start: '', 
-      end: '', 
-      reason: '' 
-    });
+    setFormData({ employeeId: selectedEmployeeId, start: '', end: '', reason: '' });
     setShowModal(true);
   };
 
@@ -214,7 +141,6 @@ export default function AdminScheduleView() {
   const handleDelete = async () => {
     if (!selectedBlock) return;
     if (!window.confirm(t('schedule.confirm_delete'))) return;
-
     try {
       await timeOffService.deleteTimeOff(selectedBlock.id);
       showAlert(t('schedule.delete_success'));
@@ -226,17 +152,17 @@ export default function AdminScheduleView() {
   };
 
   return (
-    <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div className="schedule-container">
       
-      {/* HEADER & CONTROLS */}
-      <div className="flex justify-between items-center mb-4 bg-white p-4 rounded shadow">
-        <div>
-           <h1 className="text-xl font-bold mb-2">{t('schedule.title')}</h1>
+      {/* HEADER RESPONSIVO */}
+      <div className="schedule-header">
+        <div className="schedule-controls">
+           <h1 className="text-xl font-bold">{t('schedule.title')}</h1>
            
-           <div className="flex items-center gap-2">
+           <div className="employee-selector-group">
              <label className="text-sm font-semibold">{t('schedule.employee_label')}:</label>
              <select 
-                className="border p-1 rounded"
+                className="employee-select"
                 value={selectedEmployeeId}
                 onChange={(e) => setSelectedEmployeeId(e.target.value)}
              >
@@ -248,7 +174,7 @@ export default function AdminScheduleView() {
            </div>
         </div>
 
-        <button className="btn-primary flex items-center gap-2" onClick={handleCreate}>
+        <button className="btn-primary schedule-add-btn flex items-center gap-2" onClick={handleCreate}>
           <Plus size={18} /> {t('schedule.add_time_off')}
         </button>
       </div>
@@ -259,14 +185,10 @@ export default function AdminScheduleView() {
         <CalendarWidget 
           events={calendarEvents}
           title={t('schedule.title')}
-          
-          // --- Control de Vista ---
-          view={currentView} // Forzado a usar el estado
+          view={currentView} 
           date={currentDate}
-          onView={(v) => setCurrentView(v)} // Actualizar estado al cambiar
+          onView={(v) => setCurrentView(v)}
           onNavigate={(d) => setCurrentDate(d)}
-          
-          // Interaction & Styling
           onSelectEvent={handleSelectEvent}
           eventPropGetter={eventStyleGetter}
           enableDrag={false} 
@@ -283,7 +205,7 @@ export default function AdminScheduleView() {
             
             <div className="modal-body">
               {selectedBlock ? (
-                // VIEW / DELETE MODE
+                // DELETE MODE
                 <div>
                    <p className="mb-2 text-red-600 font-bold">Bloqueo de Horario (Time Off)</p>
                    <p><strong>{t('schedule.reason_label')}:</strong> {selectedBlock.title}</p>
@@ -312,7 +234,8 @@ export default function AdminScheduleView() {
                     </select>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  {/* AQUÍ ESTÁ EL CAMBIO GRID RESPONSIVO PARA FECHAS */}
+                  <div className="modal-dates-grid">
                     <div>
                       <label>{t('schedule.start_label')}</label>
                       <input 
