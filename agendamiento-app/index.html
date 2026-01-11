@@ -3,19 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    
     <meta name="theme-color" content="#0f172a" />
     
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Agendamiento">
     <script>
-    if (typeof global === 'undefined') {
-      window.global = window;
-    }
-  </script>
+      window.onerror = function(message, source, lineno, colno, error) {
+        // Crear un div rojo con el error
+        var errorDiv = document.createElement("div");
+        errorDiv.style.position = "fixed";
+        errorDiv.style.top = "0";
+        errorDiv.style.left = "0";
+        errorDiv.style.width = "100%";
+        errorDiv.style.height = "100%";
+        errorDiv.style.backgroundColor = "white";
+        errorDiv.style.color = "red";
+        errorDiv.style.zIndex = "9999";
+        errorDiv.style.padding = "20px";
+        errorDiv.style.fontSize = "16px";
+        errorDiv.style.whiteSpace = "pre-wrap";
+        errorDiv.innerHTML = "<h1>💥 Error Detectado:</h1>" + 
+                             "<p><strong>Mensaje:</strong> " + message + "</p>" +
+                             "<p><strong>Archivo:</strong> " + source + ":" + lineno + "</p>";
+        document.body.appendChild(errorDiv);
+      };
+
+      // Polyfill extra por seguridad
+      if (typeof global === 'undefined') { window.global = window; }
+      if (typeof process === 'undefined') { window.process = { env: {} }; }
+    </script>
     
     <title>Sistema de Agendamiento</title>
   </head>
