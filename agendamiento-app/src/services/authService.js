@@ -28,39 +28,41 @@ getCurrentUserWithRole: async (inputUser = null) => {
     try {
       let user = inputUser;
 
+      // 1. CAMBIO IMPORTANTE: Usamos getUser() en vez de getSession()
+      // Esto fuerza a verificar que el token sea válido en el servidor.
       if (!user) {
-        const session = await authAdapter.getSession();
-        user = session?.user;
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError || !authData.user) {
+           console.log("⚠️ No hay sesión válida o token expirado.");
+           return { user: null, role: null, requiresPasswordChange: false };
+        }
+        user = authData.user;
       }
 
-      if (!user) return { user: null, role: null, requiresPasswordChange: false };
-      
-      // DIAGNÓSTICO: Verificamos qué usuario estamos buscando
       console.log("🔍 Buscando perfil para ID:", user.id);
 
+      // 2. CAMBIO IMPORTANTE: Usamos 'perfile' (según tu historial)
+      // Si tu tabla en Supabase se llama 'profiles', cambia esto de nuevo.
       const { data, error } = await supabase
-        .from('profiles')
+        .from('perfile')  // <--- ¡VERIFICA ESTE NOMBRE EN TU SUPABASE!
         .select('role, requires_password_change') 
-        .eq('id', user.id)
+        .eq('id', user.id) // Ojo: Verifica si la columna es 'id' o 'user_id' en la tabla perfile
         .single();
 
-      // DIAGNÓSTICO: Ver errores explícitos
       if (error) {
-          console.error("❌ ERROR SUPABASE:", error);
-          // Si hay error, es probable que no exista el perfil o RLS bloquee
-      }
-      if (!data) {
-          console.error("❌ NO SE ENCONTRÓ DATA DEL PERFIL");
-      } else {
-          console.log("✅ DATA RECIBIDA:", data);
-      }
-
-      if (error || !data) {
-          // AQUÍ ESTÁ EL PROBLEMA: Al fallar, asume que NO requiere cambio y lo deja pasar
-          console.warn("⚠️ Usando valores por defecto (Login permitido por error de lectura)");
+          console.error("❌ Error leyendo base de datos:", error.message);
+          // Si falla la lectura, no podemos dejarlo pasar como cliente por seguridad,
+          // o retornamos un rol seguro por defecto.
           return { user: user, role: 'client', requiresPasswordChange: false };
       }
-      
+
+      if (!data) {
+          console.warn("⚠️ Usuario autenticado pero sin perfil en tabla 'perfile'");
+          return { user: user, role: 'client', requiresPasswordChange: false };
+      }
+
+      console.log("✅ Perfil encontrado:", data);
+
       return { 
         user: user, 
         role: data.role || 'client',
@@ -68,11 +70,10 @@ getCurrentUserWithRole: async (inputUser = null) => {
       };
 
     } catch (error) {
-      console.error("AuthService Error Crítico:", error);
+      console.error("🔥 Error Crítico en AuthService:", error);
       return { user: null, role: null, requiresPasswordChange: false };
     }
   },
-
   // Client Registration
   async registerClient({ email, password, fullName, tenantId }) {
     const { data, error } = await supabase.auth.signUp({
