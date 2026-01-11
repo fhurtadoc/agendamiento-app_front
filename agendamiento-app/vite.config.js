@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  // 1. IMPORTANTE: Asegura que la app sepa que está en la raíz
+  base: '/', 
+
   plugins: [
     react(),
     VitePWA({
@@ -12,11 +15,15 @@ export default defineConfig({
         name: 'Sistema de Agendamiento',
         short_name: 'Agendamiento',
         description: 'App de reservas y citas',
-        // CAMBIO: Color oscuro para que la barra de estado del celular se vea integrada
-        theme_color: '#0f172a', 
+        theme_color: '#0f172a', // Tu color oscuro
         background_color: '#0f172a',
-        display: 'standalone', // <--- ESTO OCULTA LA BARRA DE NAVEGACIÓN
-        orientation: 'portrait', // Opcional: Bloquea la rotación si lo deseas
+        display: 'standalone',
+        orientation: 'portrait',
+        
+        // 2. IMPORTANTE: Definir dónde arranca la app en Android
+        start_url: '/',
+        scope: '/',
+        
         icons: [
           {
             src: 'pwa-192x192.png',
@@ -28,7 +35,6 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png'
           },
-          // Recomendado: Icono enmascarable para Android modernos
           {
             src: 'pwa-512x512.png',
             sizes: '512x512',
@@ -43,6 +49,21 @@ export default defineConfig({
     alias: {
       'react-native': 'react-native-web',
     },
+  },
+  build: {
+    // 3. SOLUCIÓN ADVERTENCIA VERCEL: Aumentar el límite a 1600kb (o lo que necesites)
+    chunkSizeWarningLimit: 1600,
+    
+    rollupOptions: {
+      output: {
+        // Opcional: Esto ayuda a separar librerías grandes en archivos distintos
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        }
+      }
+    }
   },
   optimizeDeps: {
     esbuildOptions: {
