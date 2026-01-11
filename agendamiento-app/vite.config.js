@@ -1,18 +1,16 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+// 1. Importar el plugin
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 export default defineConfig({
-  // Asegura rutas relativas correctas
-  base: '/', 
-  
-  // SOLUCIÓN PANTALLA BLANCA: Definir variables globales manualmente
-  define: {
-    'process.env': {}, 
-    'global': 'window',
-  },
-
+  base: '/',
   plugins: [
+    // 2. Usar el plugin aquí (esto arregla Buffer, process, global, etc.)
+    nodePolyfills({
+      protocolImports: true,
+    }),
     react(),
     VitePWA({
       registerType: 'autoUpdate',
@@ -49,12 +47,5 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 1600,
-  },
-  optimizeDeps: {
-    esbuildOptions: {
-      loader: {
-        '.js': 'jsx',
-      },
-    },
-  },
+  }
 });
