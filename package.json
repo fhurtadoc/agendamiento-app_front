@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "vconsole": "^3.15.1",
     "vite-plugin-node-polyfills": "^0.24.0"
   }
 }
