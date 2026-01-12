@@ -24,7 +24,7 @@ export const authService = {
   /**
    * Obtiene usuario + rol + bandera de cambio de password
    */
-getCurrentUserWithRole: async (inputUser = null) => {
+  getCurrentUserWithRole: async (inputUser = null) => {
     try {
       let user = inputUser;
 
@@ -74,6 +74,8 @@ getCurrentUserWithRole: async (inputUser = null) => {
       return { user: null, role: null, requiresPasswordChange: false };
     }
   },
+
+
   // Client Registration
   async registerClient({ email, password, fullName, tenantId }) {
     const { data, error } = await supabase.auth.signUp({
