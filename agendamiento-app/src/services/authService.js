@@ -44,7 +44,7 @@ export const authService = {
       // 2. CAMBIO IMPORTANTE: Usamos 'perfile' (según tu historial)
       // Si tu tabla en Supabase se llama 'profiles', cambia esto de nuevo.
       const { data, error } = await supabase
-        .from('perfile')  // <--- ¡VERIFICA ESTE NOMBRE EN TU SUPABASE!
+        .from('profiles')  
         .select('role, requires_password_change') 
         .eq('id', user.id) // Ojo: Verifica si la columna es 'id' o 'user_id' en la tabla perfile
         .single();
