@@ -49,6 +49,9 @@ export const authService = {
         .eq('id', user.id) // Ojo: Verifica si la columna es 'id' o 'user_id' en la tabla perfile
         .single();
 
+      console.log(data);
+        
+
       if (error) {
           console.error("❌ Error leyendo base de datos:", error.message);
           // Si falla la lectura, no podemos dejarlo pasar como cliente por seguridad,
