@@ -29,27 +29,34 @@ export const authService = {
     },
   /**
    * Obtiene el usuario actual Y su rol en un solo objeto unificado.
-   * Return: { user: Object|null, role: String|null }
+   * También determina si el usuario debe cambiar su contraseña.
+   * Return: { user: Object|null, role: String|null, requiresPasswordChange: boolean }
    */
   getCurrentUserWithRole: async () => {
     try {
       const session = await authAdapter.getSession();
       
       if (!session?.user) {
-        return { user: null, role: null };
+        return { user: null, role: null, requiresPasswordChange: false };
       }
 
-      // Si hay usuario, buscamos su rol
-      const role = await authAdapter.getUserRole(session.user.id);
+      // Fetch role and password change requirement from profiles table
+      const profile = await authAdapter.getProfile(session.user.id);
       
+      const role = profile?.role || 'client';
+      
+      // FORCED PASSWORD CHANGE ONLY FOR EMPLOYEES WITH TEMPORARY PASSWORD
+      const requiresPasswordChange = role === 'employee' && profile?.requires_password_change === true;
+
       return { 
         user: session.user, 
-        role: role || 'client' // Lógica de negocio: Default a 'client'
+        role: role,
+        requiresPasswordChange: requiresPasswordChange
       };
 
     } catch (error) {
       console.error("Auth Service Error:", error);
-      return { user: null, role: null };
+      return { user: null, role: null, requiresPasswordChange: false };
     }
   },
 
@@ -63,15 +70,21 @@ export const authService = {
     const unsubscribe = authAdapter.onAuthStateChange(async (event, session) => {
       
       if (session?.user) {
-        // Hubo login o cambio de sesión: buscamos el rol de nuevo
-        const role = await authAdapter.getUserRole(session.user.id);
+        // Hubo login o cambio de sesión: buscamos el rol y password requirement
+        const profile = await authAdapter.getProfile(session.user.id);
+        const role = profile?.role || 'client';
+        
+        // FORCED PASSWORD CHANGE ONLY FOR EMPLOYEES WITH TEMPORARY PASSWORD
+        const requiresPasswordChange = role === 'employee' && profile?.requires_password_change === true;
+
         onStateChange({ 
           user: session.user, 
-          role: role || 'client' 
+          role: role,
+          requiresPasswordChange: requiresPasswordChange
         });
       } else {
         // Logout
-        onStateChange({ user: null, role: null });
+        onStateChange({ user: null, role: null, requiresPasswordChange: false });
       }
     });
 
@@ -94,6 +107,13 @@ export const authService = {
 
     try {
       await authAdapter.updatePassword(password);
+      
+      // Reset the requires_password_change flag after successful change
+      const { data: { user } } = await authAdapter.getUser();
+      if (user) {
+        await authAdapter.updateProfile(user.id, { requires_password_change: false });
+      }
+      
       return { success: true, error: null };
     } catch (error) {
       console.error("Service Error - Change Password:", error);

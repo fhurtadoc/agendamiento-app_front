@@ -83,6 +83,23 @@ export const authAdapter = {
   },
 
   /**
+   * Fetches the full profile including role and password change requirement.
+   */
+  getProfile: async (userId) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role, requires_password_change')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.warn("Error fetching profile or no profile found", error);
+      return null;
+    }
+    return data;
+  },
+
+  /**
    * Sends a password reset email.
    */
   resetPasswordForEmail: async (email, redirectTo) => {
@@ -114,6 +131,20 @@ export const authAdapter = {
     const { data, error } = await supabase.auth.updateUser(attributes);
     if (error) throw new Error(error.message);
     return data;
+  },
+
+  /**
+   * Updates a user's profile row in the 'profiles' table.
+   */
+  updateProfile: async (userId, data) => {
+    const { data: result, error } = await supabase
+      .from('profiles')
+      .update(data)
+      .eq('id', userId)
+      .single();
+
+    if (error) throw new Error(error.message);
+    return result;
   },
 
   /**
