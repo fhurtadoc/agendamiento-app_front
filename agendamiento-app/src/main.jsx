@@ -5,8 +5,8 @@ import { TenantProvider } from './context/TenantContext'
 import { BrowserRouter } from 'react-router-dom'
 import { AlertProvider } from './context/AlertContext';
 // --- INICIO DEPURACIÓN ANDROID ---
-import VConsole from 'vconsole';
-const vConsole = new VConsole();
+//import VConsole from 'vconsole';
+//const vConsole = new VConsole();
 
 import App from './App.jsx'
 import './index.css'

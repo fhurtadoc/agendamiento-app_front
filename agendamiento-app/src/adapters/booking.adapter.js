@@ -28,18 +28,14 @@ export const bookingAdapter = {
    */
   getActiveEmployees: async () => {
     const { data, error } = await supabase
-      .from('profiles')
-      .select('id, full_name, email')
-      .eq('role', 'employee')
-      .eq('is_active', true)
-      .order('full_name', { ascending: true });
+      .rpc('obtener_empleados_disponibles');
 
     if (error) throw new Error(error.message);
 
     return (data || []).map((employee) => ({
       id: employee.id,
-      name: employee.full_name || employee.email || 'Empleado sin nombre',
-      email: employee.email || '',
+      name: employee.full_name || 'Empleado sin nombre',
+      email: '', // Mantenemos la propiedad vacía para no romper el mapeo de la UI
     }));
   },
 

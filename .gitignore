@@ -31,3 +31,4 @@ build/
 
 agendamiento-app\.env
 agendamiento-app\node_modules
+.aider*
