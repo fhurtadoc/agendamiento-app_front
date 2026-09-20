@@ -20,8 +20,8 @@ export default function LoginView() {
     setLoading(true);
     setError('');
 
-    // 1. CORRECCIÓN: Extraemos el 'user' directamente de la respuesta del login
-    const { success, user, error: loginError } = await authService.login(email, password);  
+    // 1. Login and get success/error only (no user in response)
+    const { success, error: loginError } = await authService.login(email, password);  
     
     if (loginError) console.log(loginError);
 
@@ -30,17 +30,17 @@ export default function LoginView() {
       setLoading(false);
     } else {
       try {
-        // 2. CORRECCIÓN: Le pasamos el 'user' a la función para que no tenga que buscarlo
-        const { role, requiresPasswordChange } = await authService.getCurrentUserWithRole(user);
+        // 2. Get role and password change flag from the active session
+        const { role, requiresPasswordChange } = await authService.getCurrentUserWithRole();
 
         console.log('User role:', role);
         console.log('Requires Password Change:', requiresPasswordChange);
 
-        if (requiresPasswordChange===true) {
+        if (requiresPasswordChange === true) {
           console.log('hola desde Requires Password Change');
           
-           navigate('/cambiar-password'); 
-           return; 
+          navigate('/cambiar-password'); 
+          return; 
         }
 
         if (role === 'admin') {
