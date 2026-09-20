@@ -36,7 +36,12 @@ export default function HomeView() {
     fetchData();
   }, [user]);
 
- const handleLogout = async () => { 
+  const handleConfirmAppointment = (appointmentId) => {
+    // TODO: Add the client appointment confirmation API endpoint.
+    console.log('Confirm appointment:', appointmentId);
+  };
+
+  const handleLogout = async () => { 
     const TIMEOUT_MS = 1000;
     try {      
       const logoutPromise = authService.logout();      
@@ -96,21 +101,35 @@ export default function HomeView() {
           ) : (
             // List of Appointments
             <ul className={styles.appointmentList}>
-              {appointments.map((appt) => (
-                <li key={appt.id} className={styles.appointmentItem}>
-                  <div className={styles.apptInfo}>
-                    <span className={styles.serviceName}>
-                      {appt.service?.name || 'Service'}
-                    </span>
-                    <span className={styles.apptDate}>
-                      {formatDate(appt.start_time)}
-                    </span>
-                  </div>
-                  <span className={`${styles.statusBadge} ${styles[appt.status]}`}>
-                    {appt.status} {/* You can wrap this in t() if needed */}
-                  </span>
-                </li>
-              ))}
+              {appointments.map((appt) => {
+                const canConfirm = ['pending', 'unconfirmed'].includes(appt.status);
+
+                return (
+                  <li key={appt.id} className={styles.appointmentItem}>
+                    <div className={styles.apptInfo}>
+                      <span className={styles.serviceName}>
+                        {appt.service?.name || 'Service'}
+                      </span>
+                      <span className={styles.apptDate}>
+                        {formatDate(appt.start_time)}
+                      </span>
+                    </div>
+                    {canConfirm ? (
+                      <button
+                        type="button"
+                        className="bg-red-500 text-white px-4 py-2 rounded"
+                        onClick={() => handleConfirmAppointment(appt.id)}
+                      >
+                        Confirmar
+                      </button>
+                    ) : (
+                      <span className={`${styles.statusBadge} ${styles[appt.status]}`}>
+                        {appt.status}
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
 
