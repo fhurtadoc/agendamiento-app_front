@@ -1,26 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next'; // <--- Import i18n hook
+import { useTranslation } from 'react-i18next';
 import { bookingService } from '../services/booking.service';
 import { ChevronLeft, ChevronRight, Clock } from 'lucide-react';
-import styles from './css/TimeSelection.module.css'; 
+import styles from './css/TimeSelection.module.css';
 
-const TimeSelection = ({ selectedService, onBack, onSelectSlot }) => {
-  const { t, i18n } = useTranslation(); // <--- Init hook
+const TimeSelection = ({
+  selectedService,
+  selectedEmployeeId,
+  onBack,
+  onSelectSlot,
+}) => {
+  const { t, i18n } = useTranslation();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [slots, setSlots] = useState([]); // List of strings: ['09:00', '10:00']
+  const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Load slots when the date changes
   useEffect(() => {
     const fetchSlots = async () => {
       setLoading(true);
       setError(null);
       setSlots([]);
-      
+
       try {
-        // The service returns clean strings ("09:00")
-        const availableSlots = await bookingService.getSlots(currentDate);
+        const availableSlots = await bookingService.getSlots(
+          currentDate,
+          selectedEmployeeId
+        );
         setSlots(availableSlots);
       } catch (err) {
         console.error(err);
@@ -31,57 +37,86 @@ const TimeSelection = ({ selectedService, onBack, onSelectSlot }) => {
     };
 
     fetchSlots();
-  }, [currentDate, t]); // Added 't' as dependency
+  }, [currentDate, selectedEmployeeId, t]);
 
-  // Handle day change
   const changeDay = (days) => {
     const newDate = new Date(currentDate);
     newDate.setDate(currentDate.getDate() + days);
-    
-    // Prevent going to the past (resets to today if earlier)
+
     const today = new Date();
-    today.setHours(0,0,0,0);
-    
+    today.setHours(0, 0, 0, 0);
+
     if (newDate >= today) {
       setCurrentDate(newDate);
     }
   };
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const isToday = currentDate >= today;
+
   return (
     <div className={styles.container}>
-      {/* Header with Service Info */}
-      <div className={styles.header}>        
+      <div className={styles.header}>
+        <button
+          type="button"
+          onClick={onBack}
+          className={styles.navBtn}
+          aria-label={t('booking.back', { defaultValue: 'Volver' })}
+        >
+          <ChevronLeft size={20} />
+        </button>
+
         <div className={styles.serviceInfo}>
           <span>{t('booking.label')}</span>
           <strong>{selectedService?.title}</strong>
         </div>
       </div>
 
-      {/* Date Selector */}
       <div className={styles.dateSelector}>
-        <button onClick={() => changeDay(-1)} className={styles.navBtn}>
+        <button
+          type="button"
+          onClick={() => changeDay(-1)}
+          className={styles.navBtn}
+          disabled={isToday}
+          aria-label={t('booking.previous_day', {
+            defaultValue: 'Día anterior',
+          })}
+        >
           <ChevronLeft size={20} />
         </button>
-        
+
         <div className={styles.dateDisplay}>
-          {/* We use i18n.language to format the date in the correct locale */}
           <span className={styles.dayName}>
-            {currentDate.toLocaleDateString(i18n.language, { weekday: 'long' })}
+            {currentDate.toLocaleDateString(i18n.language, {
+              weekday: 'long',
+            })}
           </span>
           <span className={styles.fullDate}>
-            {currentDate.toLocaleDateString(i18n.language, { day: 'numeric', month: 'long' })}
+            {currentDate.toLocaleDateString(i18n.language, {
+              day: 'numeric',
+              month: 'long',
+            })}
           </span>
         </div>
-        
-        <button onClick={() => changeDay(1)} className={styles.navBtn}>
+
+        <button
+          type="button"
+          onClick={() => changeDay(1)}
+          className={styles.navBtn}
+          aria-label={t('booking.next_day', {
+            defaultValue: 'Día siguiente',
+          })}
+        >
           <ChevronRight size={20} />
         </button>
       </div>
 
-      {/* Slots Grid */}
       <div className={styles.slotsContainer}>
         {loading ? (
-          <div className={styles.loading}>{t('booking.loading_slots')}</div>
+          <div className={styles.loading}>
+            {t('booking.loading_slots')}
+          </div>
         ) : error ? (
           <div className={styles.error}>{error}</div>
         ) : slots.length === 0 ? (
@@ -91,12 +126,10 @@ const TimeSelection = ({ selectedService, onBack, onSelectSlot }) => {
           </div>
         ) : (
           <div className={styles.grid}>
-            {/* 'timeSlot' is already a clean string "09:00".
-               No slices or transformations needed here.
-            */}
-            {slots.map((timeSlot, index) => (
-              <button 
-                key={index} 
+            {slots.map((timeSlot) => (
+              <button
+                type="button"
+                key={timeSlot}
                 className={styles.slotBtn}
                 onClick={() => onSelectSlot(currentDate, timeSlot)}
               >
