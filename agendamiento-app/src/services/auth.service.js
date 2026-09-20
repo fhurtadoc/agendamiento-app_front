@@ -80,19 +80,24 @@ export const authService = {
   /**
    * Validates and updates the password.
    * @param {string} password 
+   * Return: { success: boolean, error: string|null }
    */
   changePassword: async (password) => {
     // Business Logic: Validation
-    if (!password || password.length < 6) {
-      throw new Error("La contraseña debe tener al menos 6 caracteres");
+    if (!password || password.trim().length === 0) {
+      return { success: false, error: 'La contraseña es obligatoria.' };
+    }
+
+    if (password.trim().length < 6) {
+      return { success: false, error: 'La contraseña debe tener al menos 6 caracteres.' };
     }
 
     try {
       await authAdapter.updatePassword(password);
-      return true;
+      return { success: true, error: null };
     } catch (error) {
       console.error("Service Error - Change Password:", error);
-      throw error;
+      return { success: false, error: error.message };
     }
   }, 
   // Reutilizamos getSession o getCurrentUser para obtener el email actual
