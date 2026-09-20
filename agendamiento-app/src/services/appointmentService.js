@@ -24,6 +24,22 @@ export const appointmentService = {
     return { data, error };
   },
 
+  // Confirmar una cita del cliente
+  async confirmAppointment(appointmentId) {
+    const { data, error } = await supabase
+      .from('appointments')
+      .update({ status: 'confirmed' })
+      .eq('id', appointmentId)
+      .select('id, status')
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  },
+
   // 3. Obtener mis citas (para el client)
   async getMyAppointments(clientId) {
     const { data, error } = await supabase

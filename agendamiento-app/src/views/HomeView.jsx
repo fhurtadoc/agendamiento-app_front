@@ -36,9 +36,23 @@ export default function HomeView() {
     fetchData();
   }, [user]);
 
-  const handleConfirmAppointment = (appointmentId) => {
-    // TODO: Add the client appointment confirmation API endpoint.
-    console.log('Confirm appointment:', appointmentId);
+  const handleConfirmAppointment = async (appointmentId) => {
+    try {
+      const updatedAppointment = await appointmentService.confirmAppointment(appointmentId);
+
+      setAppointments((currentAppointments) =>
+        currentAppointments.map((appointment) =>
+          appointment.id === appointmentId
+            ? {
+                ...appointment,
+                status: updatedAppointment?.status || 'confirmed',
+              }
+            : appointment
+        )
+      );
+    } catch (error) {
+      console.error('Error confirming appointment:', error);
+    }
   };
 
   const handleLogout = async () => { 
@@ -71,6 +85,21 @@ export default function HomeView() {
     });
   };
 
+  const startOfDay = (dateValue) => {
+    const date = new Date(dateValue);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  };
+
+  const today = startOfDay(new Date());
+
+  const visibleAppointments = appointments.filter(({ start_time }) => {
+    if (!start_time) return false;
+
+    const appointmentDate = startOfDay(start_time);
+    return !Number.isNaN(appointmentDate.getTime()) && appointmentDate >= today;
+  });
+
   return (
     <div className={styles.container}>
       
@@ -93,7 +122,7 @@ export default function HomeView() {
           
           {loading ? (
             <p>{t('common.loading')}...</p>
-          ) : appointments.length === 0 ? (
+          ) : visibleAppointments.length === 0 ? (
             // Empty State
             <p className={styles.emptyStateText}>
               {t('home.no_appointments')}
@@ -101,7 +130,7 @@ export default function HomeView() {
           ) : (
             // List of Appointments
             <ul className={styles.appointmentList}>
-              {appointments.map((appt) => {
+              {visibleAppointments.map((appt) => {
                 const canConfirm = ['pending', 'unconfirmed'].includes(appt.status);
 
                 return (
