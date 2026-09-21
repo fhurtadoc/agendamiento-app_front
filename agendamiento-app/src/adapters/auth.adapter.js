@@ -20,6 +20,25 @@ export const authAdapter = {
   },
 
   /**
+   * Starts the Google OAuth flow.
+   * Supabase uses this flow for both new-user sign-up and returning-user login.
+   */
+  signInWithGoogle: async (redirectTo) => {
+    const options = redirectTo ? { redirectTo } : {};
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  },
+
+  /**
    * Registers a new user.
    */
   signUp: async (email, password, options) => {

@@ -101,6 +101,47 @@ export const authService = {
     }
   },
 
+  /**
+   * Starts Google OAuth for either sign-up or login.
+   */
+  signInWithGoogle: async (redirectTo) => {
+    try {
+      try {
+        localStorage.removeItem('app_user_profile');
+      } catch (error) {
+        console.warn(
+          'Unable to clear cached profile before Google sign-in:',
+          getErrorMessage(error)
+        );
+      }
+
+      const data = await withTimeout(
+        authAdapter.signInWithGoogle(redirectTo),
+        'Google sign-in timeout exceeded.'
+      );
+
+      if (data?.error) {
+        throw data.error;
+      }
+
+      if (!data?.url) {
+        throw new Error('Google sign-in did not return a redirect URL.');
+      }
+
+      return {
+        success: true,
+        data,
+        error: null,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        data: null,
+        error: getErrorMessage(error),
+      };
+    }
+  },
+
   getCurrentUserWithRole: async (inputUser = null) => {
     try {
       let user = inputUser;
