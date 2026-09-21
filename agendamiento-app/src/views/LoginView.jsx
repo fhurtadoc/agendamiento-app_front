@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next'; 
+import { useTranslation } from 'react-i18next';
 import { authService } from '../services/authService';
 import { useTenant } from '../context/TenantContext';
 import styles from './css/LoginView.module.css';
 
 export default function LoginView() {
-  const { t } = useTranslation(); 
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   const navigate = useNavigate();
   const tenant = useTenant();
 
@@ -20,47 +20,65 @@ export default function LoginView() {
     setLoading(true);
     setError('');
 
-    // 1. Login and get success/error only (no user in response)
-    const { success, error: loginError } = await authService.login(email, password);  
-    
-    if (loginError) console.log(loginError);
+    try {
+      const loginResult = await authService.login(email, password);
 
-    if (!success) {
-      setError(t('auth.invalid_credentials'));
-      setLoading(false);
-    } else {
-      try {
-        // 2. Get role and password change flag from the active session
-        const { role, requiresPasswordChange } = await authService.getCurrentUserWithRole();
-
-        console.log('User role:', role);
-        console.log('Requires Password Change:', requiresPasswordChange);
-
-        if (requiresPasswordChange === true) {
-          console.log('hola desde Requires Password Change');
-          
-          navigate('/cambiar-password'); 
-          return; 
-        }
-
-        if (role === 'admin') {
-          navigate('/admin/dashboard');
-        } else if (role === 'employee' || role === 'empleado') { 
-          navigate('/empleado/home');
-        } else {
-          navigate('/');
-        }
-      } catch (err) {
-        console.error("Error in post-login redirection:", err);
-        navigate('/');
+      if (loginResult.error) {
+        console.log(loginResult.error);
       }
+
+      if (!loginResult.success || loginResult.error) {
+        setError(t('auth.invalid_credentials'));
+        return;
+      }
+
+      const authState = await authService.getCurrentUserWithRole(
+        loginResult.user
+      );
+
+      if (authState.error) {
+        setError(authState.error);
+        return;
+      }
+
+      if (!authState.user || !authState.role) {
+        setError(t('auth.invalid_credentials'));
+        return;
+      }
+
+      const { role, requiresPasswordChange } = authState;
+
+      if (requiresPasswordChange === true) {
+        navigate('/cambiar-password', { replace: true });
+        return;
+      }
+
+      if (role === 'admin') {
+        navigate('/admin/dashboard', { replace: true });
+      } else if (role === 'employee') {
+        navigate('/empleado/home', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
+    } catch (err) {
+      console.error('Error in post-login redirection:', err);
+
+      const message =
+        err !== null &&
+        typeof err === 'object' &&
+        'message' in err
+          ? err.message
+          : 'No se pudo completar el inicio de sesión.';
+
+      setError(message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className={styles.container}>
       <div className={styles.card}>
-        
         <div className={styles.header}>
           {tenant?.theme?.logoUrl && (
             <img src={tenant.theme.logoUrl} alt="Logo" className={styles.logo} />
@@ -94,8 +112,15 @@ export default function LoginView() {
 
           {error && <div className={styles.error}>{error}</div>}
 
-          <div style={{textAlign: 'right', marginBottom: '1.5rem'}}>
-            <Link to="/recuperar" style={{fontSize: '0.85rem', color: '#6b7280', textDecoration: 'none'}}>
+          <div style={{ textAlign: 'right', marginBottom: '1.5rem' }}>
+            <Link
+              to="/recuperar"
+              style={{
+                fontSize: '0.85rem',
+                color: '#6b7280',
+                textDecoration: 'none',
+              }}
+            >
               {t('auth.forgot_password')}
             </Link>
           </div>
@@ -111,7 +136,6 @@ export default function LoginView() {
             {t('auth.register_link_text')}
           </Link>
         </div>
-
       </div>
     </div>
   );

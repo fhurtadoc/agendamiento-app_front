@@ -1,209 +1,588 @@
-import { createClient } from '@supabase/supabase-js'; 
-import { supabase, supabaseUrl, supabaseAnonKey } from './supabaseClient'; 
+import { createClient } from '@supabase/supabase-js';
+import { supabase, supabaseUrl, supabaseAnonKey } from './supabaseClient';
 import { authAdapter } from '../adapters/auth.adapter';
 
+const AUTH_REQUEST_TIMEOUT_MS = 10000;
+
+const getErrorMessage = (error) => {
+  if (error !== null && typeof error === 'object' && 'message' in error) {
+    return String(error.message);
+  }
+
+  return String(error ?? 'Unknown error');
+};
+
+const withTimeout = (promise, message, timeoutMs = AUTH_REQUEST_TIMEOUT_MS) => {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+
+    const timer = setTimeout(() => {
+      if (settled) return;
+
+      settled = true;
+      reject(new Error(message));
+    }, timeoutMs);
+
+    Promise.resolve(promise).then(
+      (value) => {
+        if (settled) return;
+
+        settled = true;
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        if (settled) return;
+
+        settled = true;
+        clearTimeout(timer);
+        reject(error);
+      }
+    );
+  });
+};
+
+const normalizeRole = (role) => {
+  const normalizedRole = String(role ?? 'client').trim().toLowerCase();
+
+  return normalizedRole === 'empleado' ? 'employee' : normalizedRole;
+};
+
 export const authService = {
-  // Basic Login
   login: async (email, password) => {
     try {
-      const data = await authAdapter.login(email, password);
-      return { 
-        success: true, 
-        user: data.user, 
-        error: null 
+      const data = await withTimeout(
+        authAdapter.login(email, password),
+        'El inicio de sesión excedió el tiempo de espera.'
+      );
+
+      if (data?.error) {
+        throw data.error;
+      }
+
+      return {
+        success: true,
+        user: data?.user ?? data?.session?.user ?? null,
+        error: null,
       };
     } catch (error) {
-      return { 
-        success: false, 
-        user: null, 
-        error: error.message 
+      return {
+        success: false,
+        user: null,
+        error: getErrorMessage(error),
       };
     }
   },
 
-  /**
-   * Obtiene usuario + rol + bandera de cambio de password
-   */
   getCurrentUserWithRole: async (inputUser = null) => {
     try {
       let user = inputUser;
 
-      // 1. CAMBIO IMPORTANTE: Usamos getUser() en vez de getSession()
-      // Esto fuerza a verificar que el token sea válido en el servidor.
       if (!user) {
-        const { data: authData, error: authError } = await supabase.auth.getUser();
-        if (authError || !authData.user) {
-           console.log("⚠️ No hay sesión válida o token expirado.");
-           return { user: null, role: null, requiresPasswordChange: false };
+        const authResult = await withTimeout(
+          supabase.auth.getUser(),
+          'La validación de la sesión excedió el tiempo de espera.'
+        );
+
+        if (authResult.error || !authResult.data?.user) {
+          if (authResult.error) {
+            console.warn(
+              'No hay sesión válida o token expirado:',
+              getErrorMessage(authResult.error)
+            );
+          }
+
+          return {
+            user: null,
+            role: null,
+            requiresPasswordChange: false,
+          };
         }
-        user = authData.user;
+
+        user = authResult.data.user;
       }
 
-      console.log("🔍 Buscando perfil para ID:", user.id);
+      const userId = typeof user === 'string' ? user : user?.id;
 
-      // 2. CAMBIO IMPORTANTE: Usamos 'perfile' (según tu historial)
-      // Si tu tabla en Supabase se llama 'profiles', cambia esto de nuevo.
-      const { data, error } = await supabase
-        .from('profiles')  
-        .select('role, requires_password_change') 
-        .eq('id', user.id) // Ojo: Verifica si la columna es 'id' o 'user_id' en la tabla perfile
-        .single();
-
-      console.log(data);
-        
-
-      if (error) {
-          console.error("❌ Error leyendo base de datos:", error.message);
-          // Si falla la lectura, no podemos dejarlo pasar como cliente por seguridad,
-          // o retornamos un rol seguro por defecto.
-          return { user: user, role: 'client', requiresPasswordChange: false };
+      if (!userId) {
+        return {
+          user: null,
+          role: null,
+          requiresPasswordChange: false,
+        };
       }
 
-      if (!data) {
-          console.warn("⚠️ Usuario autenticado pero sin perfil en tabla 'perfile'");
-          return { user: user, role: 'client', requiresPasswordChange: false };
+      console.log('🔍 Buscando perfil para ID:', userId);
+
+      const profileResult = await withTimeout(
+        supabase
+          .from('profiles')
+          .select('role, requires_password_change')
+          .eq('id', userId)
+          .single(),
+        'La consulta del perfil excedió el tiempo de espera.'
+      );
+
+      const currentUser = typeof user === 'object' ? user : null;
+
+      if (profileResult.error) {
+        console.error(
+          '❌ Error leyendo base de datos:',
+          getErrorMessage(profileResult.error)
+        );
+
+        if (profileResult.error.code === 'PGRST116') {
+          return {
+            user: currentUser,
+            role: 'client',
+            requiresPasswordChange: false,
+          };
+        }
+
+        return {
+          user: currentUser,
+          role: null,
+          requiresPasswordChange: false,
+          error: getErrorMessage(profileResult.error),
+        };
       }
 
-      console.log("✅ Perfil encontrado:", data);
+      if (!profileResult.data) {
+        console.warn("⚠️ Usuario autenticado pero sin perfil en tabla 'profiles'");
 
-      return { 
-        user: user, 
-        role: data.role || 'client',
-        requiresPasswordChange: data.requires_password_change || false 
+        return {
+          user: currentUser,
+          role: 'client',
+          requiresPasswordChange: false,
+        };
+      }
+
+      const role = normalizeRole(profileResult.data.role || 'client');
+
+      console.log('✅ Perfil encontrado:', profileResult.data);
+
+      return {
+        user: currentUser,
+        role,
+        requiresPasswordChange:
+          role === 'employee' && Boolean(profileResult.data.requires_password_change),
       };
-
     } catch (error) {
-      console.error("🔥 Error Crítico en AuthService:", error);
-      return { user: null, role: null, requiresPasswordChange: false };
+      console.error('🔥 Error Crítico en AuthService:', getErrorMessage(error));
+
+      return {
+        user: typeof inputUser === 'object' ? inputUser : null,
+        role: null,
+        requiresPasswordChange: false,
+        error: getErrorMessage(error),
+      };
     }
   },
 
-
-  // Client Registration
   async registerClient({ email, password, fullName, tenantId }) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-          tenant_id: tenantId,
-          role: 'client', 
-        },
-      },
-    });
-    return { data, error };
+    try {
+      return await withTimeout(
+        supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: fullName,
+              tenant_id: tenantId,
+              role: 'client',
+            },
+          },
+        }),
+        'El registro excedió el tiempo de espera.'
+      );
+    } catch (error) {
+      return {
+        data: null,
+        error,
+      };
+    }
   },
 
-/**
-   * Ghost Client Implementation for Employees
-   * FIX: Ahora configuramos el cliente para NO PERSISTIR la sesión.
-   */
   async registerEmployee({ email, password, firstName, lastName, tenantId }) {
-    // 1. Configuración especial: persistSession = false
-    // Esto evita que sobrescriba el localStorage del Admin
-    const ghostClient = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: false, // <--- LA CLAVE DEL ARREGLO
-        autoRefreshToken: false,
-        detectSessionInUrl: false
-      }
-    });
-
-    // 2. Crear el usuario
-    const { data, error } = await ghostClient.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: `${firstName} ${lastName}`,
-          tenant_id: tenantId,
-          role: 'employee', 
+    try {
+      const ghostClient = createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false,
         },
-      },
-    }); 
+      });
 
-    // 3. Importante: Como no persistimos sesión, no necesitamos hacer signOut del ghostClient.
-    // Simplemente dejamos que la variable muera al terminar la función.
+      const result = await withTimeout(
+        ghostClient.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: `${firstName} ${lastName}`,
+              tenant_id: tenantId,
+              role: 'employee',
+            },
+          },
+        }),
+        'El registro del empleado excedió el tiempo de espera.'
+      );
 
-    if (error) {
-      return { success: false, error: error.message };
+      if (result.error) {
+        return {
+          success: false,
+          error: getErrorMessage(result.error),
+        };
+      }
+
+      return {
+        success: true,
+        data: result.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: getErrorMessage(error),
+      };
     }
-    return { success: true, data };
   },
 
   async logout() {
-    try {      
-      localStorage.clear(); 
-      sessionStorage.clear();
-      const { error } = await supabase.auth.signOut();
-      
-      return { error };
-    } catch (err) {
-      console.error("Error forzando logout:", err);
-      return { error: err };
+    let signOutError = null;
+
+    try {
+      const result = await withTimeout(
+        supabase.auth.signOut(),
+        'El cierre de sesión excedió el tiempo de espera.'
+      );
+
+      signOutError = result?.error ?? null;
+    } catch (error) {
+      signOutError = error;
+      console.error('Error forzando logout:', error);
+    } finally {
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch (storageError) {
+        console.error('Error limpiando almacenamiento:', storageError);
+      }
     }
+
+    return {
+      error: signOutError,
+    };
   },
 
   async getCurrentUser() {
-    const { data: { user } } = await supabase.auth.getUser();
-    return user;
-  }, 
+    try {
+      const result = await withTimeout(
+        supabase.auth.getUser(),
+        'La obtención del usuario excedió el tiempo de espera.'
+      );
 
-  // --- AQUÍ ESTÁ LA FUNCIÓN QUE FALTABA ---
-  /**
-   * Escucha cambios en la sesión (Login, Logout, Auto-refresh)
-   * y devuelve los datos completos al Context.
-   */
-  subscribeToChanges: (callback) => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // 1. Cada vez que cambia el estado, buscamos la info completa (Rol + RequiresPass)
-      // Usamos 'authService' explícitamente para asegurar la referencia
-      const fullData = await authService.getCurrentUserWithRole(session?.user);
-      
-      // 2. Enviamos la data fresca al Context
-      callback(fullData);
-    });
+      if (result.error || !result.data?.user) {
+        if (result.error) {
+          console.warn(
+            'No hay sesión válida o token expirado:',
+            getErrorMessage(result.error)
+          );
+        }
 
-    // Devolvemos la función de limpieza
-    return () => subscription.unsubscribe();
+        return null;
+      }
+
+      return result.data.user;
+    } catch (error) {
+      console.error('Error obteniendo usuario:', getErrorMessage(error));
+      return null;
+    }
   },
-  // ----------------------------------------
+
+  subscribeToChanges: (callback) => {
+    if (typeof callback !== 'function') {
+      return () => {};
+    }
+
+    const result = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        try {
+          if (event === 'TOKEN_REFRESHED') {
+            return;
+          }
+
+          const fullData = session?.user
+            ? await authService.getCurrentUserWithRole(session.user)
+            : {
+                user: null,
+                role: null,
+                requiresPasswordChange: false,
+              };
+
+          callback(fullData, event);
+        } catch (error) {
+          console.error(
+            'Error procesando cambio de sesión:',
+            getErrorMessage(error)
+          );
+
+          const fallbackData = {
+            user: null,
+            role: null,
+            requiresPasswordChange: false,
+            error: getErrorMessage(error),
+          };
+
+          try {
+            callback(fallbackData, event);
+          } catch (callbackError) {
+            console.error(
+              'Error notificando cambio de sesión:',
+              getErrorMessage(callbackError)
+            );
+          }
+        }
+      }
+    );
+
+    const subscription = result?.data?.subscription;
+
+    return () => {
+      if (subscription?.unsubscribe) {
+        subscription.unsubscribe();
+      }
+    };
+  },
 
   async resetPasswordForEmail(email) {
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/actualizar-password`,
-    });
-    return { data, error };
+    try {
+      return await withTimeout(
+        supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/actualizar-password`,
+        }),
+        'La solicitud de recuperación excedió el tiempo de espera.'
+      );
+    } catch (error) {
+      return {
+        data: null,
+        error,
+      };
+    }
   },
 
   async updatePassword(newPassword) {
-    const { data, error } = await supabase.auth.updateUser({ 
-      password: newPassword 
-    });
-    return { data, error };
+    try {
+      return await withTimeout(
+        supabase.auth.updateUser({
+          password: newPassword,
+        }),
+        'La actualización de contraseña excedió el tiempo de espera.'
+      );
+    } catch (error) {
+      return {
+        data: null,
+        error,
+      };
+    }
   },
 
-  // Función compuesta: Cambia password Y desbloquea perfil
-  async changePasswordAndUnlock(newPassword, userId) {
-    // 1. Auth update
-    const { error: authError } = await supabase.auth.updateUser({ 
-      password: newPassword 
-    });
-
-    if (authError) return { success: false, error: authError.message };
-
-    // 2. Profile update (Unlock)
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({ requires_password_change: false })
-      .eq('id', userId);
-
-    if (profileError) {
-      console.error("Error desbloqueando perfil:", profileError);
-      return { success: false, error: "Contraseña cambiada, pero error actualizando perfil." };
+  async changePassword(password) {
+    if (!password || password.trim().length === 0) {
+      return {
+        success: false,
+        error: 'La contraseña es obligatoria.',
+      };
     }
 
-    return { success: true };
-  }
+    if (password.trim().length < 6) {
+      return {
+        success: false,
+        error: 'La contraseña debe tener al menos 6 caracteres.',
+      };
+    }
+
+    try {
+      const authResult = await withTimeout(
+        supabase.auth.updateUser({
+          password: password.trim(),
+        }),
+        'La actualización de contraseña excedió el tiempo de espera.'
+      );
+
+      if (authResult.error) {
+        return {
+          success: false,
+          error: getErrorMessage(authResult.error),
+        };
+      }
+
+      const userResult = await withTimeout(
+        supabase.auth.getUser(),
+        'La verificación del usuario excedió el tiempo de espera.'
+      );
+
+      if (userResult.error || !userResult.data?.user) {
+        return {
+          success: false,
+          error: 'No se pudo verificar el usuario después del cambio.',
+        };
+      }
+
+      const profileResult = await withTimeout(
+        supabase
+          .from('profiles')
+          .update({ requires_password_change: false })
+          .eq('id', userResult.data.user.id),
+        'La actualización del perfil excedió el tiempo de espera.'
+      );
+
+      if (profileResult.error) {
+        return {
+          success: false,
+          error: getErrorMessage(profileResult.error),
+        };
+      }
+
+      return {
+        success: true,
+        error: null,
+      };
+    } catch (error) {
+      console.error('Service Error - Change Password:', getErrorMessage(error));
+
+      return {
+        success: false,
+        error: getErrorMessage(error),
+      };
+    }
+  },
+
+  async getCurrentSession() {
+    try {
+      const result = await withTimeout(
+        supabase.auth.getSession(),
+        'La obtención de la sesión excedió el tiempo de espera.'
+      );
+
+      return result.data?.session ?? null;
+    } catch (error) {
+      console.error('Error obteniendo sesión:', getErrorMessage(error));
+      return null;
+    }
+  },
+
+  async updateAccountSecurity({ email, password } = {}) {
+    const updates = {};
+
+    if (password && password.trim() !== '') {
+      updates.password = password;
+    }
+
+    if (email && email.trim() !== '') {
+      updates.email = email;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return {
+        updated: false,
+        message: 'No hay cambios para guardar.',
+      };
+    }
+
+    try {
+      const result = await withTimeout(
+        supabase.auth.updateUser(updates),
+        'La actualización de seguridad excedió el tiempo de espera.'
+      );
+
+      if (result.error) {
+        return {
+          updated: false,
+          message: getErrorMessage(result.error),
+        };
+      }
+
+      let message = 'Seguridad actualizada.';
+
+      if (updates.email) {
+        message += ' Revisa tu nuevo correo para confirmar.';
+      }
+
+      return {
+        updated: true,
+        message,
+      };
+    } catch (error) {
+      return {
+        updated: false,
+        message: getErrorMessage(error),
+      };
+    }
+  },
+
+  async changePasswordAndUnlock(newPassword, userId) {
+    const profileUserId = typeof userId === 'object' ? userId?.id : userId;
+
+    if (!newPassword || !newPassword.trim()) {
+      return {
+        success: false,
+        error: 'La contraseña es obligatoria.',
+      };
+    }
+
+    if (!profileUserId) {
+      return {
+        success: false,
+        error: 'No se encontró el identificador del usuario.',
+      };
+    }
+
+    try {
+      const authResult = await withTimeout(
+        supabase.auth.updateUser({
+          password: newPassword.trim(),
+        }),
+        'La actualización de contraseña excedió el tiempo de espera.'
+      );
+
+      if (authResult.error) {
+        return {
+          success: false,
+          error: getErrorMessage(authResult.error),
+        };
+      }
+
+      const profileResult = await withTimeout(
+        supabase
+          .from('profiles')
+          .update({ requires_password_change: false })
+          .eq('id', profileUserId),
+        'La actualización del perfil excedió el tiempo de espera.'
+      );
+
+      if (profileResult.error) {
+        console.error('Error desbloqueando perfil:', profileResult.error);
+
+        return {
+          success: false,
+          error: 'Contraseña cambiada, pero error actualizando perfil.',
+        };
+      }
+
+      return {
+        success: true,
+        error: null,
+      };
+    } catch (error) {
+      console.error(
+        'Error cambiando contraseña y desbloqueando perfil:',
+        getErrorMessage(error)
+      );
+
+      return {
+        success: false,
+        error: getErrorMessage(error),
+      };
+    }
+  },
 };

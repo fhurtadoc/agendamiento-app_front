@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { authService } from '../../services/authService';
+import { useAuth } from '../../context/AuthContext';
 import { useTenant } from '../../context/TenantContext';
 import styles from '../css/LoginView.module.css';
 
 export default function ChangePasswordView() {
   const { t } = useTranslation();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const tenant = useTenant();
 
@@ -14,71 +16,105 @@ export default function ChangePasswordView() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
-  const handleLogout = async () => { 
-     const TIMEOUT_MS = 1000;
-     try {      
-       const logoutPromise = authService.logout();      
-       const timeoutPromise = new Promise((resolve) => {
-         setTimeout(() => {
-           resolve("tiempo_agotado");
-         }, TIMEOUT_MS);
-       });      
-       await Promise.race([logoutPromise, timeoutPromise]);
- 
-     } catch (error) {
-       console.warn("Error o timeout en logout:", error);
-     } finally {      
-       window.location.href = '/login';
-     }
-   };
+  const handleLogout = async () => {
+    setLoggingOut(true);
+
+    try {
+      if (typeof signOut === 'function') {
+        await signOut();
+      } else {
+        const result = await authService.logout();
+
+        if (result?.error) {
+          throw result.error;
+        }
+      }
+
+      navigate('/login', { replace: true });
+    } catch (error) {
+      console.warn('Error o timeout en logout:', error);
+      navigate('/login', { replace: true });
+    } finally {
+      setLoggingOut(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    // 1. Validaciones básicas
-    if (password !== confirmPassword) {
-      setError(t('auth.password_mismatch')); 
-      setLoading(false);
-      return;
-    }
-
-    if (password.length < 6) {
-      setError(t('auth.password_min_length'));
-      setLoading(false);
-      return;
-    }
-
     try {
-      // 2. Obtenemos el ID del usuario actual
-      const user = await authService.getCurrentUser();
-      
-      if (!user) {
+      if (!user?.id) {
         setError(t('error.no_user_found'));
-        setTimeout(() => navigate('/login'), 2000);
+        navigate('/login', { replace: true });
         return;
       }
 
-      // 3. Llamamos al servicio
-      const { success, error: serviceError } = await authService.changePasswordAndUnlock(password, user.id);
+      const normalizedPassword = password.trim();
+      const normalizedConfirmation = confirmPassword.trim();
 
-      if (!success) {
-        setError(serviceError || t('auth.update_error')); 
-        setLoading(false);
-      } else {
-        // 4. ÉXITO: Redirección según rol
-        const { role } = await authService.getCurrentUserWithRole(user);
-        
-        if (role === 'admin') navigate('/admin/dashboard');
-        else if (role === 'employee') navigate('/empleado/home');
-        else navigate('/');
+      if (normalizedPassword !== normalizedConfirmation) {
+        setError(t('auth.password_mismatch'));
+        return;
       }
 
+      if (normalizedPassword.length < 6) {
+        setError(t('auth.password_min_length'));
+        return;
+      }
+
+      const result = await authService.changePasswordAndUnlock(
+        normalizedPassword,
+        user.id
+      );
+
+      if (!result.success) {
+        setError(result.error || t('auth.update_error'));
+        return;
+      }
+
+      const authState = await authService.getCurrentUserWithRole(user);
+
+      if (authState.error) {
+        setError(authState.error);
+        return;
+      }
+
+      if (!authState.user || !authState.role) {
+        setError(t('auth.update_error'));
+        return;
+      }
+
+      if (authState.requiresPasswordChange) {
+        setError(t('auth.update_error'));
+        return;
+      }
+
+      const role =
+        authState.role === 'empleado' ? 'employee' : authState.role;
+
+      if (role === 'admin') {
+        navigate('/admin/dashboard', { replace: true });
+      } else if (role === 'employee') {
+        navigate('/empleado/home', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
     } catch (err) {
       console.error(err);
-      setError(t('error.generic') + (err.message || '')); 
+
+      const message =
+        err !== null &&
+        typeof err === 'object' &&
+        'message' in err
+          ? err.message
+          : t('error.generic');
+
+      setError(message);
+    } finally {
       setLoading(false);
     }
   };
@@ -87,8 +123,7 @@ export default function ChangePasswordView() {
     <div className={styles.container}>
       <div className={styles.card}>
         <div className={styles.header}>
-           {/* Branding */}
-           {tenant?.theme?.logoUrl && (
+          {tenant?.theme?.logoUrl && (
             <img src={tenant.theme.logoUrl} alt="Logo" className={styles.logo} />
           )}
           <h2 className={styles.title}>{t('auth.new_password_title')}</h2>
@@ -99,8 +134,14 @@ export default function ChangePasswordView() {
 
         <form onSubmit={handleSubmit}>
           <div className={styles.formGroup}>
-            <label style={{display:'block', marginBottom:'.5rem', fontSize:'.9rem'}}>
-                {t('auth.new_password_label')}
+            <label
+              style={{
+                display: 'block',
+                marginBottom: '.5rem',
+                fontSize: '.9rem',
+              }}
+            >
+              {t('auth.new_password_label')}
             </label>
             <input
               type="password"
@@ -113,8 +154,14 @@ export default function ChangePasswordView() {
           </div>
 
           <div className={styles.formGroup}>
-            <label style={{display:'block', marginBottom:'.5rem', fontSize:'.9rem'}}>
-                {t('auth.confirm_password_label')}
+            <label
+              style={{
+                display: 'block',
+                marginBottom: '.5rem',
+                fontSize: '.9rem',
+              }}
+            >
+              {t('auth.confirm_password_label')}
             </label>
             <input
               type="password"
@@ -133,24 +180,32 @@ export default function ChangePasswordView() {
           </button>
         </form>
 
-        {/* --- NUEVO BOTÓN DE SALIDA --- */}
-        <div style={{ marginTop: '1.5rem', borderTop: '1px solid #eee', paddingTop: '1rem', textAlign: 'center' }}>
-            <button 
-                type="button" 
-                onClick={handleLogout}
-                style={{ 
-                    background: 'transparent', 
-                    border: 'none', 
-                    color: '#ef4444', // Rojo para indicar salida
-                    cursor: 'pointer', 
-                    fontSize: '0.9rem',
-                    textDecoration: 'underline'
-                }}
-            >
-                {t('auth.logout_button')} {/* "Cerrar Sesión" */}
-            </button>
+        <div
+          style={{
+            marginTop: '1.5rem',
+            borderTop: '1px solid #eee',
+            paddingTop: '1rem',
+            textAlign: 'center',
+          }}
+        >
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={loggingOut}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#ef4444',
+              cursor: loggingOut ? 'wait' : 'pointer',
+              fontSize: '0.9rem',
+              textDecoration: 'underline',
+            }}
+          >
+            {loggingOut
+              ? t('common.loading')
+              : t('auth.logout_button')}
+          </button>
         </div>
-
       </div>
     </div>
   );

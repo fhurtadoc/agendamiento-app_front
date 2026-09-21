@@ -1,66 +1,122 @@
 import { createContext, useState, useEffect, useContext } from 'react';
-import { authService } from '../services/authService'; // Asegúrate que el nombre del archivo coincida
-import i18n from '../i18n'; 
+import { authService } from '../services/authService';
+import i18n from '../i18n';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
+
+const getErrorMessage = (error) => {
+  if (error !== null && typeof error === 'object' && 'message' in error) {
+    return String(error.message);
+  }
+
+  return String(error ?? 'Unknown authentication error');
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
-  // 1. NUEVO ESTADO: Bandera de seguridad
-  const [requiresPasswordChange, setRequiresPasswordChange] = useState(false); // <--- NUEVO
+  const [requiresPasswordChange, setRequiresPasswordChange] = useState(false);
+  const [authError, setAuthError] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Helper: Syncs the app language with the user's preference
   const handleLanguageSync = (userLanguage) => {
-    if (userLanguage) {
+    if (!userLanguage) return;
+
+    try {
       i18n.changeLanguage(userLanguage);
       localStorage.setItem('app_language', userLanguage);
+    } catch (error) {
+      console.error('Error synchronizing language:', error);
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      const result = await authService.logout();
+
+      if (result?.error) {
+        throw result.error;
+      }
+    } catch (error) {
+      console.error('Error closing session:', error);
+    } finally {
+      setUser(null);
+      setRole(null);
+      setRequiresPasswordChange(false);
+      setAuthError(null);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    // 1. Initial Load
+    let active = true;
+
+    const applyAuthState = (state = {}) => {
+      if (!active) return;
+
+      const errorMessage = state.error
+        ? getErrorMessage(state.error)
+        : null;
+
+      setUser(state.user ?? null);
+      setRole(state.role ?? null);
+      setRequiresPasswordChange(Boolean(state.requiresPasswordChange));
+      setAuthError(errorMessage);
+      setLoading(false);
+
+      if (state.language) {
+        handleLanguageSync(state.language);
+      }
+    };
+
     const initAuth = async () => {
       try {
-        // 2. MODIFICADO: Recuperamos también 'requiresPasswordChange' del servicio
-        const { user, role, language, requiresPasswordChange } = await authService.getCurrentUserWithRole(); // <--- UPDATE
-        
-        setUser(user);
-        setRole(role);
-        // 3. ACTUALIZAR ESTADO
-        setRequiresPasswordChange(requiresPasswordChange || false); // <--- NUEVO
-        
-        // Apply the language from the database
-        handleLanguageSync(language);
-        
+        const state = await authService.getCurrentUserWithRole();
+
+        if (active) {
+          applyAuthState(state);
+        }
       } catch (error) {
-        console.error("Error initializing auth:", error);
+        console.error('Error initializing auth:', error);
+
+        if (active) {
+          setUser(null);
+          setRole(null);
+          setRequiresPasswordChange(false);
+          setAuthError(getErrorMessage(error));
+          setLoading(false);
+        }
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     };
 
     initAuth();
 
-    // 2. Subscription to events
-    const unsubscribe = authService.subscribeToChanges((data) => {
-      setUser(data.user);
-      setRole(data.role);
-      
-      // 4. ACTUALIZAR ESTADO EN CAMBIOS (Login/Logout dinámico)
-      // Asegúrate que tu servicio envíe este dato en el evento
-      setRequiresPasswordChange(data.requiresPasswordChange || false); // <--- NUEVO
-      
-      if (data.language) {
-        handleLanguageSync(data.language);
-      }
-      
-      setLoading(false);
-    });
+    let unsubscribe;
 
-    // Cleanup on unmount
+    try {
+      unsubscribe = authService.subscribeToChanges((state, event) => {
+        if (event === 'INITIAL_SESSION') {
+          return;
+        }
+
+        applyAuthState(state);
+      });
+    } catch (error) {
+      console.error('Error subscribing to auth changes:', error);
+
+      if (active) {
+        setAuthError(getErrorMessage(error));
+        setLoading(false);
+      }
+    }
+
     return () => {
+      active = false;
+
       if (typeof unsubscribe === 'function') {
         unsubscribe();
       }
@@ -68,11 +124,27 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    // 5. EXPONER LA VARIABLE AL APP
-    <AuthContext.Provider value={{ user, role, requiresPasswordChange, loading }}> 
-      {!loading && children}
+    <AuthContext.Provider
+      value={{
+        user,
+        role,
+        requiresPasswordChange,
+        loading,
+        authError,
+        signOut,
+      }}
+    >
+      {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+
+  return context;
+};
