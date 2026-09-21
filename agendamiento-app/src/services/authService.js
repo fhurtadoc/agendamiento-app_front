@@ -1,6 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 import { supabase, supabaseUrl, supabaseAnonKey } from './supabaseClient';
 import { authAdapter } from '../adapters/auth.adapter';
+import {
+  decodeProfile,
+  encodeProfile,
+} from '../tools/crypto';
 
 const AUTH_REQUEST_TIMEOUT_MS = 10000;
 
@@ -48,12 +52,35 @@ const normalizeRole = (role) => {
   return normalizedRole === 'empleado' ? 'employee' : normalizedRole;
 };
 
+const saveProfileToCache = (profile) => {
+  try {
+    localStorage.setItem(
+      'app_user_profile',
+      encodeProfile(profile)
+    );
+  } catch (error) {
+    console.warn(
+      'Unable to cache user profile:',
+      getErrorMessage(error)
+    );
+  }
+};
+
 export const authService = {
   login: async (email, password) => {
     try {
+      localStorage.removeItem('app_user_profile');
+    } catch (error) {
+      console.warn(
+        'Unable to clear cached profile before login:',
+        getErrorMessage(error)
+      );
+    }
+
+    try {
       const data = await withTimeout(
         authAdapter.login(email, password),
-        'El inicio de sesión excedió el tiempo de espera.'
+        'Login timeout exceeded.'
       );
 
       if (data?.error) {
@@ -81,13 +108,13 @@ export const authService = {
       if (!user) {
         const authResult = await withTimeout(
           supabase.auth.getUser(),
-          'La validación de la sesión excedió el tiempo de espera.'
+          'Session validation timeout exceeded.'
         );
 
         if (authResult.error || !authResult.data?.user) {
           if (authResult.error) {
             console.warn(
-              'No hay sesión válida o token expirado:',
+              'No valid session or token expired:',
               getErrorMessage(authResult.error)
             );
           }
@@ -112,7 +139,38 @@ export const authService = {
         };
       }
 
-      console.log('🔍 Buscando perfil para ID:', userId);
+      const currentUser = typeof user === 'object' ? user : null;
+
+      try {
+        const encodedProfile = localStorage.getItem('app_user_profile');
+
+        if (encodedProfile) {
+          const cachedProfile = decodeProfile(encodedProfile);
+
+          if (
+            cachedProfile &&
+            typeof cachedProfile === 'object' &&
+            String(cachedProfile.userId) === String(userId) &&
+            typeof cachedProfile.role === 'string' &&
+            cachedProfile.role.trim().length > 0 &&
+            typeof cachedProfile.requiresPasswordChange === 'boolean'
+          ) {
+            return {
+              user: currentUser,
+              role: normalizeRole(cachedProfile.role),
+              requiresPasswordChange:
+                cachedProfile.requiresPasswordChange,
+            };
+          }
+        }
+      } catch (error) {
+        console.warn(
+          'Unable to read cached user profile:',
+          getErrorMessage(error)
+        );
+      }
+
+      console.log('🔍 Fetching profile for ID:', userId);
 
       const profileResult = await withTimeout(
         supabase
@@ -120,18 +178,22 @@ export const authService = {
           .select('role, requires_password_change')
           .eq('id', userId)
           .single(),
-        'La consulta del perfil excedió el tiempo de espera.'
+        'Profile query timeout exceeded.'
       );
-
-      const currentUser = typeof user === 'object' ? user : null;
 
       if (profileResult.error) {
         console.error(
-          '❌ Error leyendo base de datos:',
+          '❌ Error reading database:',
           getErrorMessage(profileResult.error)
         );
 
         if (profileResult.error.code === 'PGRST116') {
+          saveProfileToCache({
+            userId,
+            role: 'client',
+            requiresPasswordChange: false,
+          });
+
           return {
             user: currentUser,
             role: 'client',
@@ -148,7 +210,15 @@ export const authService = {
       }
 
       if (!profileResult.data) {
-        console.warn("⚠️ Usuario autenticado pero sin perfil en tabla 'profiles'");
+        console.warn(
+          "⚠️ Authenticated user has no profile in the 'profiles' table."
+        );
+
+        saveProfileToCache({
+          userId,
+          role: 'client',
+          requiresPasswordChange: false,
+        });
 
         return {
           user: currentUser,
@@ -158,17 +228,28 @@ export const authService = {
       }
 
       const role = normalizeRole(profileResult.data.role || 'client');
+      const requiresPasswordChange =
+        role === 'employee' &&
+        Boolean(profileResult.data.requires_password_change);
 
-      console.log('✅ Perfil encontrado:', profileResult.data);
+      saveProfileToCache({
+        userId,
+        role,
+        requiresPasswordChange,
+      });
+
+      console.log('✅ Profile found:', profileResult.data);
 
       return {
         user: currentUser,
         role,
-        requiresPasswordChange:
-          role === 'employee' && Boolean(profileResult.data.requires_password_change),
+        requiresPasswordChange,
       };
     } catch (error) {
-      console.error('🔥 Error Crítico en AuthService:', getErrorMessage(error));
+      console.error(
+        '🔥 Critical Error in AuthService:',
+        getErrorMessage(error)
+      );
 
       return {
         user: typeof inputUser === 'object' ? inputUser : null,
@@ -193,7 +274,7 @@ export const authService = {
             },
           },
         }),
-        'El registro excedió el tiempo de espera.'
+        'Registration timeout exceeded.'
       );
     } catch (error) {
       return {
@@ -225,7 +306,7 @@ export const authService = {
             },
           },
         }),
-        'El registro del empleado excedió el tiempo de espera.'
+        'Employee registration timeout exceeded.'
       );
 
       if (result.error) {
@@ -251,21 +332,30 @@ export const authService = {
     let signOutError = null;
 
     try {
+      localStorage.removeItem('app_user_profile');
+    } catch (error) {
+      console.warn(
+        'Unable to clear cached profile during logout:',
+        getErrorMessage(error)
+      );
+    }
+
+    try {
       const result = await withTimeout(
         supabase.auth.signOut(),
-        'El cierre de sesión excedió el tiempo de espera.'
+        'Logout timeout exceeded.'
       );
 
       signOutError = result?.error ?? null;
     } catch (error) {
       signOutError = error;
-      console.error('Error forzando logout:', error);
+      console.error('Error forcing logout:', error);
     } finally {
       try {
         localStorage.clear();
         sessionStorage.clear();
       } catch (storageError) {
-        console.error('Error limpiando almacenamiento:', storageError);
+        console.error('Error clearing storage:', storageError);
       }
     }
 
@@ -278,13 +368,13 @@ export const authService = {
     try {
       const result = await withTimeout(
         supabase.auth.getUser(),
-        'La obtención del usuario excedió el tiempo de espera.'
+        'Fetching the user timeout exceeded.'
       );
 
       if (result.error || !result.data?.user) {
         if (result.error) {
           console.warn(
-            'No hay sesión válida o token expirado:',
+            'No valid session or token expired:',
             getErrorMessage(result.error)
           );
         }
@@ -294,7 +384,7 @@ export const authService = {
 
       return result.data.user;
     } catch (error) {
-      console.error('Error obteniendo usuario:', getErrorMessage(error));
+      console.error('Error fetching user:', getErrorMessage(error));
       return null;
     }
   },
@@ -322,7 +412,7 @@ export const authService = {
           callback(fullData, event);
         } catch (error) {
           console.error(
-            'Error procesando cambio de sesión:',
+            'Error processing session change:',
             getErrorMessage(error)
           );
 
@@ -337,7 +427,7 @@ export const authService = {
             callback(fallbackData, event);
           } catch (callbackError) {
             console.error(
-              'Error notificando cambio de sesión:',
+              'Error notifying session change:',
               getErrorMessage(callbackError)
             );
           }
@@ -360,7 +450,7 @@ export const authService = {
         supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/actualizar-password`,
         }),
-        'La solicitud de recuperación excedió el tiempo de espera.'
+        'Password recovery request timeout exceeded.'
       );
     } catch (error) {
       return {
@@ -376,7 +466,7 @@ export const authService = {
         supabase.auth.updateUser({
           password: newPassword,
         }),
-        'La actualización de contraseña excedió el tiempo de espera.'
+        'Password update timeout exceeded.'
       );
     } catch (error) {
       return {
@@ -390,14 +480,14 @@ export const authService = {
     if (!password || password.trim().length === 0) {
       return {
         success: false,
-        error: 'La contraseña es obligatoria.',
+        error: 'Password is required.',
       };
     }
 
     if (password.trim().length < 6) {
       return {
         success: false,
-        error: 'La contraseña debe tener al menos 6 caracteres.',
+        error: 'Password must be at least 6 characters long.',
       };
     }
 
@@ -406,7 +496,7 @@ export const authService = {
         supabase.auth.updateUser({
           password: password.trim(),
         }),
-        'La actualización de contraseña excedió el tiempo de espera.'
+        'Password update timeout exceeded.'
       );
 
       if (authResult.error) {
@@ -418,13 +508,13 @@ export const authService = {
 
       const userResult = await withTimeout(
         supabase.auth.getUser(),
-        'La verificación del usuario excedió el tiempo de espera.'
+        'User verification timeout exceeded.'
       );
 
       if (userResult.error || !userResult.data?.user) {
         return {
           success: false,
-          error: 'No se pudo verificar el usuario después del cambio.',
+          error: 'Unable to verify the user after the password change.',
         };
       }
 
@@ -433,7 +523,7 @@ export const authService = {
           .from('profiles')
           .update({ requires_password_change: false })
           .eq('id', userResult.data.user.id),
-        'La actualización del perfil excedió el tiempo de espera.'
+        'Profile update timeout exceeded.'
       );
 
       if (profileResult.error) {
@@ -461,12 +551,12 @@ export const authService = {
     try {
       const result = await withTimeout(
         supabase.auth.getSession(),
-        'La obtención de la sesión excedió el tiempo de espera.'
+        'Fetching the session timeout exceeded.'
       );
 
       return result.data?.session ?? null;
     } catch (error) {
-      console.error('Error obteniendo sesión:', getErrorMessage(error));
+      console.error('Error fetching session:', getErrorMessage(error));
       return null;
     }
   },
@@ -485,14 +575,14 @@ export const authService = {
     if (Object.keys(updates).length === 0) {
       return {
         updated: false,
-        message: 'No hay cambios para guardar.',
+        message: 'There are no changes to save.',
       };
     }
 
     try {
       const result = await withTimeout(
         supabase.auth.updateUser(updates),
-        'La actualización de seguridad excedió el tiempo de espera.'
+        'Security update timeout exceeded.'
       );
 
       if (result.error) {
@@ -502,10 +592,10 @@ export const authService = {
         };
       }
 
-      let message = 'Seguridad actualizada.';
+      let message = 'Security updated.';
 
       if (updates.email) {
-        message += ' Revisa tu nuevo correo para confirmar.';
+        message += ' Check your new email to confirm the change.';
       }
 
       return {
@@ -526,14 +616,14 @@ export const authService = {
     if (!newPassword || !newPassword.trim()) {
       return {
         success: false,
-        error: 'La contraseña es obligatoria.',
+        error: 'Password is required.',
       };
     }
 
     if (!profileUserId) {
       return {
         success: false,
-        error: 'No se encontró el identificador del usuario.',
+        error: 'User identifier was not found.',
       };
     }
 
@@ -542,7 +632,7 @@ export const authService = {
         supabase.auth.updateUser({
           password: newPassword.trim(),
         }),
-        'La actualización de contraseña excedió el tiempo de espera.'
+        'Password update timeout exceeded.'
       );
 
       if (authResult.error) {
@@ -557,16 +647,25 @@ export const authService = {
           .from('profiles')
           .update({ requires_password_change: false })
           .eq('id', profileUserId),
-        'La actualización del perfil excedió el tiempo de espera.'
+        'Profile update timeout exceeded.'
       );
 
       if (profileResult.error) {
-        console.error('Error desbloqueando perfil:', profileResult.error);
+        console.error('Error unlocking profile:', profileResult.error);
 
         return {
           success: false,
-          error: 'Contraseña cambiada, pero error actualizando perfil.',
+          error: 'Password changed, but the profile could not be updated.',
         };
+      }
+
+      try {
+        localStorage.removeItem('app_user_profile');
+      } catch (error) {
+        console.warn(
+          'Unable to clear cached profile after password change:',
+          getErrorMessage(error)
+        );
       }
 
       return {
@@ -575,7 +674,7 @@ export const authService = {
       };
     } catch (error) {
       console.error(
-        'Error cambiando contraseña y desbloqueando perfil:',
+        'Error changing password and unlocking profile:',
         getErrorMessage(error)
       );
 
