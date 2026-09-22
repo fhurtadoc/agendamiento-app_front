@@ -6,8 +6,7 @@
     "loading": "Cargando...",
     "back": "Volver",
     "close": "Cerrar",
-    "delete":"eliminar"
-
+    "delete": "eliminar"
   },
   "auth": {
     "login_button": "Iniciar Sesión",
@@ -70,7 +69,7 @@
   "info": {
     "backend_logic": "Para crear un nuevo usuario de forma segura, necesitamos implementar lógica de Backend."
   },
- "settings": {
+  "settings": {
     "language_label": "Seleccionar Idioma"
   },
   "booking": {
@@ -162,16 +161,73 @@
     "menu_calendar": "Agenda Maestra",
     "menu_settings": "Configuración",
     "logout_system": "Salir del Sistema",
-    "create_button":"Crear empleado",
-    "menu_services":"Services"
-
+    "create_button": "Crear empleado",
+    "menu_services": "Services"
+  },
+  "adminBooking": {
+    "title": "Crear cita desde administración",
+    "description": "Completa los cinco pasos para crear una cita para un cliente.",
+    "progress": "Progreso de la nueva cita",
+    "step_count": "Paso {{current}} de {{total}}",
+    "step_service": "Servicio",
+    "step_client": "Cliente",
+    "step_employee": "Colaborador",
+    "step_time": "Horario",
+    "step_confirm": "Confirmar",
+    "select_service": "Selecciona un servicio",
+    "select_client": "Selecciona un cliente",
+    "select_employee": "Selecciona un colaborador",
+    "select_time": "Selecciona un horario",
+    "select_service_option": "Seleccionar {{service}}",
+    "select_client_option": "Seleccionar {{client}}",
+    "select_employee_option": "Seleccionar {{employee}}",
+    "select_slot_option": "Seleccionar {{time}}",
+    "search_clients": "Buscar clientes",
+    "search_clients_placeholder": "Busca por nombre o correo...",
+    "no_services": "No hay servicios activos disponibles.",
+    "no_clients": "No hay clientes disponibles.",
+    "no_clients_match": "Ningún cliente coincide con esta búsqueda.",
+    "no_employees": "No hay colaboradores disponibles.",
+    "unnamed_client": "Cliente sin nombre",
+    "unnamed_employee": "Colaborador sin nombre",
+    "available_times": "Horarios disponibles",
+    "select_employee_for_slots": "Selecciona un colaborador para ver los horarios disponibles.",
+    "no_slots": "No hay horarios disponibles para esta fecha.",
+    "try_another_date": "Prueba con otra fecha o colaborador.",
+    "summary_note": "Revisa los detalles antes de crear la cita.",
+    "service": "Servicio",
+    "client": "Cliente",
+    "employee": "Colaborador",
+    "date": "Fecha",
+    "time": "Hora",
+    "duration": "Duración",
+    "price": "Precio",
+    "contact": "Contacto",
+    "no_contact": "No hay datos de contacto disponibles.",
+    "service_unavailable": "Servicio no disponible",
+    "client_unavailable": "Cliente no disponible",
+    "employee_unavailable": "Colaborador no disponible",
+    "next": "Siguiente",
+    "back": "Atrás",
+    "confirm": "Confirmar cita",
+    "confirming": "Creando cita...",
+    "cancel": "Cancelar",
+    "cancel_title": "¿Cancelar la nueva cita?",
+    "cancel_message": "Se descartarán los detalles seleccionados.",
+    "keep_editing": "Seguir editando",
+    "discard": "Descartar",
+    "loading": "Cargando...",
+    "load_error": "No se pudo cargar la información.",
+    "retry": "Intentar de nuevo",
+    "appointment_created": "Cita creada correctamente.",
+    "appointment_create_error": "No se pudo crear la cita."
   },
   "navigation": {
     "home": "Inicio",
     "appointments": "Turnos",
     "profile": "Perfil",
     "agenda": "Agenda"
-  },  
+  },
   "calendar": {
     "next": "Sig >",
     "previous": "< Ant",
@@ -195,14 +251,13 @@
     "delete_success": "Bloqueo eliminado.",
     "confirm_delete": "¿Estás seguro de eliminar este bloqueo?",
     "error_fetching": "Error al cargar horarios.",
-    "schedule":"Horarios"
+    "schedule": "Horarios"
   },
   "services": {
-  "create_title": "Crear Nuevo Servicio",
-  "name_label": "Nombre del Servicio",
-  "duration_label": "Duración Estimada",
-  "price_label": "Precio ($)",
-  "create_success": "¡Servicio creado correctamente!"
-}
-
+    "create_title": "Crear Nuevo Servicio",
+    "name_label": "Nombre del Servicio",
+    "duration_label": "Duración Estimada",
+    "price_label": "Precio ($)",
+    "create_success": "¡Servicio creado correctamente!"
+  }
 }

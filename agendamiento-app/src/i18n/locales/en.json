@@ -6,7 +6,7 @@
     "loading": "Loading...",
     "back": "Back",
     "close": "Close",
-     "delete":"delete"
+    "delete": "delete"
   },
   "auth": {
     "login_button": "Log In",
@@ -47,7 +47,6 @@
     "recover_error": "Error: We could not send the email. Please verify it is correct.",
     "recover_success": "Done! Check your inbox to reset your password.",
     "back_to_login": "← Back to Login"
-    
   },
   "success": {
     "reservation_created": "Reservation created successfully!",
@@ -162,9 +161,66 @@
     "menu_calendar": "Master Schedule",
     "menu_settings": "Settings",
     "logout_system": "Exit System",
-    "create_button":"Create new employee",
-    "menu_services":"Services"
-
+    "create_button": "Create new employee",
+    "menu_services": "Services"
+  },
+  "adminBooking": {
+    "title": "Create appointment",
+    "description": "Complete each step to create an appointment for a client.",
+    "progress": "New appointment progress",
+    "step_count": "Step {{current}} of {{total}}",
+    "step_service": "Service",
+    "step_client": "Client",
+    "step_employee": "Employee",
+    "step_time": "Time",
+    "step_confirm": "Confirm",
+    "select_service": "Select a service",
+    "select_client": "Select a client",
+    "select_employee": "Select an employee",
+    "select_time": "Select a time slot",
+    "select_service_option": "Select {{service}}",
+    "select_client_option": "Select {{client}}",
+    "select_employee_option": "Select {{employee}}",
+    "select_slot_option": "Select {{time}}",
+    "search_clients": "Search clients",
+    "search_clients_placeholder": "Search by name or email...",
+    "no_services": "There are no active services available.",
+    "no_clients": "No clients are available.",
+    "no_clients_match": "No clients match this search.",
+    "no_employees": "No employees are available.",
+    "unnamed_client": "Client without a name",
+    "unnamed_employee": "Employee without a name",
+    "available_times": "Available times",
+    "select_employee_for_slots": "Select an employee to view available times.",
+    "no_slots": "No times are available for this date.",
+    "try_another_date": "Try another date or employee.",
+    "summary_note": "Review the details before creating the appointment.",
+    "service": "Service",
+    "client": "Client",
+    "employee": "Employee",
+    "date": "Date",
+    "time": "Time",
+    "duration": "Duration",
+    "price": "Price",
+    "contact": "Contact",
+    "no_contact": "No contact details available.",
+    "service_unavailable": "Service unavailable",
+    "client_unavailable": "Client unavailable",
+    "employee_unavailable": "Employee unavailable",
+    "next": "Next",
+    "back": "Back",
+    "confirm": "Confirm appointment",
+    "confirming": "Creating appointment...",
+    "cancel": "Cancel",
+    "cancel_title": "Cancel new appointment?",
+    "cancel_message": "The selected details will be discarded.",
+    "keep_editing": "Keep editing",
+    "discard": "Discard",
+    "loading": "Loading...",
+    "load_error": "The information could not be loaded.",
+    "retry": "Try again",
+    "appointment_created": "Appointment created successfully.",
+    "appointment_create_error": "The appointment could not be created."
   },
   "navigation": {
     "home": "Home",
@@ -195,13 +251,13 @@
     "delete_success": "Block removed.",
     "confirm_delete": "Are you sure you want to remove this block?",
     "error_fetching": "Error loading schedules.",
-    "schedule":"schedule"
+    "schedule": "schedule"
   },
   "services": {
-  "create_title": "Create New Service",
-  "name_label": "Service Name",
-  "duration_label": "Estimated Duration",
-  "price_label": "Price ($)",
-  "create_success": "Service created successfully!"
-}
+    "create_title": "Create New Service",
+    "name_label": "Service Name",
+    "duration_label": "Estimated Duration",
+    "price_label": "Price ($)",
+    "create_success": "Service created successfully!"
+  }
 }

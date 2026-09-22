@@ -1,0 +1,611 @@
+.section {
+  margin-top: 2rem;
+}
+
+.sectionHeading {
+  margin: 0;
+  color: #1e293b;
+  font-size: 1.5rem;
+  line-height: 1.3;
+}
+
+.sectionDescription {
+  margin: 0.5rem 0 1.25rem;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.subheading {
+  margin: 0 0 1rem;
+  color: #334155;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.selectionGrid,
+.optionsList {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.optionItem {
+  min-width: 0;
+}
+
+.optionButton {
+  width: 100%;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  color: #1f2937;
+  text-align: left;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  cursor: pointer;
+  font: inherit;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.optionButton:hover {
+  transform: translateY(-2px);
+  border-color: #dbeafe;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+}
+
+.optionButton:focus-visible {
+  outline: 3px solid rgba(76, 64, 230, 0.25);
+  outline-offset: 2px;
+}
+
+.selectedOption {
+  color: #3730a3;
+  background: #f5f3ff;
+  border-color: #4c40e6;
+  box-shadow: 0 0 0 2px rgba(76, 64, 230, 0.1);
+}
+
+.personIcon {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4c40e6;
+  background: #f5f3ff;
+  border-radius: 12px;
+}
+
+.selectedOption .personIcon {
+  color: #ffffff;
+  background: #4c40e6;
+}
+
+.optionContent {
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.primaryText {
+  overflow: hidden;
+  color: #1f2937;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.secondaryText {
+  overflow: hidden;
+  color: #64748b;
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selectedIcon {
+  flex: 0 0 auto;
+  color: #4c40e6;
+}
+
+.searchLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.searchField {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.searchIcon {
+  position: absolute;
+  top: 50%;
+  left: 0.9rem;
+  color: #94a3b8;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  height: 46px;
+  box-sizing: border-box;
+  padding: 0 0.9rem 0 2.5rem;
+  color: #1f2937;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  outline: none;
+  font: inherit;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.searchInput::placeholder {
+  color: #94a3b8;
+}
+
+.searchInput:focus {
+  border-color: #4c40e6;
+  box-shadow: 0 0 0 3px rgba(76, 64, 230, 0.12);
+}
+
+.timeLayout {
+  display: grid;
+  grid-template-columns: minmax(190px, 240px) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.dateControl,
+.slotsPanel {
+  min-width: 0;
+  padding: 1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+}
+
+.dateLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+  color: #475569;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.dateInput {
+  width: 100%;
+  height: 44px;
+  box-sizing: border-box;
+  padding: 0 0.7rem;
+  color: #1f2937;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  outline: none;
+  font: inherit;
+}
+
+.dateInput:focus {
+  border-color: #4c40e6;
+  box-shadow: 0 0 0 3px rgba(76, 64, 230, 0.12);
+}
+
+.dateInput:disabled {
+  color: #94a3b8;
+  background: #f8fafc;
+  cursor: not-allowed;
+}
+
+.slotsHeading {
+  margin: 0 0 0.85rem;
+  color: #334155;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.slotGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+  gap: 0.65rem;
+}
+
+.slotButton {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.65rem;
+  color: #334155;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.slotButton:hover:not(:disabled) {
+  color: #3730a3;
+  transform: translateY(-1px);
+  border-color: #a5b4fc;
+}
+
+.slotButton:focus-visible {
+  outline: 3px solid rgba(76, 64, 230, 0.25);
+  outline-offset: 2px;
+}
+
+.slotButton:disabled {
+  color: #94a3b8;
+  background: #f1f5f9;
+  cursor: not-allowed;
+}
+
+.selectedSlot {
+  color: #ffffff;
+  background: #4c40e6;
+  border-color: #4c40e6;
+}
+
+.helperText {
+  margin: 0.85rem 0 0;
+  color: #64748b;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.summary {
+  padding: 1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+}
+
+.summaryNote {
+  margin: 0 0 1rem;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.summaryList {
+  margin: 0;
+}
+
+.summaryItem {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.35fr) minmax(0, 1fr);
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid #f1f5f9;
+}
+
+.summaryItem:first-child {
+  border-top: 0;
+}
+
+.summaryLabel {
+  color: #64748b;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.summaryValue {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #1f2937;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.wizardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.footerActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
+.button {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  box-sizing: border-box;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.button:focus-visible {
+  outline: 3px solid rgba(76, 64, 230, 0.25);
+  outline-offset: 2px;
+}
+
+.button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.primaryButton {
+  color: #ffffff;
+  background: #4c40e6;
+  border: 1px solid #4c40e6;
+}
+
+.primaryButton:hover:not(:disabled) {
+  background: #4338ca;
+  border-color: #4338ca;
+}
+
+.secondaryButton {
+  color: #334155;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+}
+
+.secondaryButton:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.dangerButton {
+  color: #ffffff;
+  background: #dc2626;
+  border: 1px solid #dc2626;
+}
+
+.dangerButton:hover:not(:disabled) {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.iconSpin {
+  animation: spin 0.8s linear infinite;
+}
+
+.statePanel,
+.emptyState {
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 1.25rem;
+  color: #64748b;
+  text-align: center;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 16px;
+}
+
+.stateIcon {
+  color: #4c40e6;
+}
+
+.statePanel[role='alert'] .stateIcon {
+  color: #dc2626;
+}
+
+.stateText {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.stateAction {
+  padding: 0.45rem 0.75rem;
+  color: #4c40e6;
+  background: #ffffff;
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.modalBackdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.modal {
+  width: min(100%, 430px);
+  padding: 1.25rem;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.modalTitle {
+  margin: 0;
+  color: #1e293b;
+  font-size: 1.05rem;
+}
+
+.modalClose {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  cursor: pointer;
+}
+
+.modalClose:hover {
+  color: #1e293b;
+  background: #f1f5f9;
+}
+
+.modalMessage {
+  margin: 0.85rem 0 1.25rem;
+  color: #64748b;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
+.stepNumber {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.progressLabel {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 760px) {
+  .timeLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .wizardFooter {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .footerActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .progressLabel {
+    max-width: 72px;
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .section {
+    margin-top: 1.5rem;
+  }
+
+  .summaryItem {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+
+  .footerActions {
+    grid-template-columns: 1fr;
+  }
+
+  .slotGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .optionButton {
+    gap: 0.65rem;
+    padding: 0.75rem;
+  }
+
+  .personIcon {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .optionButton,
+  .slotButton {
+    transition: none;
+  }
+
+  .iconSpin {
+    animation-duration: 2s;
+  }
+}
