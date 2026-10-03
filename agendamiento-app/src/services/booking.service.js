@@ -2,6 +2,18 @@ import { bookingAdapter } from '../adapters/booking.adapter';
 
 export const bookingService = {
   /**
+   * Sucursales disponibles para el tenant actual.
+   */
+  getBranches: async (tenantId) => {
+    try {
+      return await bookingAdapter.getBranches(tenantId);
+    } catch (error) {
+      console.error('Error obteniendo sucursales:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Proveedor del catálogo de servicios activos.
    */
   getCatalog: async () => {
@@ -14,13 +26,15 @@ export const bookingService = {
   },
 
   /**
-   * Obtiene las empleadas activas disponibles para reserva.
+   * Obtiene los empleados activos de una sucursal.
+   *
+   * @param {string} branchId - UUID de la sucursal seleccionada.
    */
-  getAvailableEmployees: async () => {
+  getAvailableEmployees: async (branchId) => {
     try {
-      return await bookingAdapter.getActiveEmployees();
+      return await bookingAdapter.getActiveEmployees(branchId);
     } catch (error) {
-      console.error('Error obteniendo empleadas disponibles:', error);
+      console.error('Error obteniendo empleados disponibles:', error);
       throw error;
     }
   },
@@ -52,14 +66,16 @@ export const bookingService = {
    * @param {object} service - Servicio seleccionado.
    * @param {Date} dateObj - Día seleccionado.
    * @param {string} timeStr - Hora seleccionada en formato HH:MM.
-   * @param {string|null} employeeId - Empleada seleccionada.
+   * @param {string|null} employeeId - Empleado seleccionado.
+   * @param {string} branchId - Sucursal seleccionada (obligatoria).
    */
   createBooking: async (
     userId,
     service,
     dateObj,
     timeStr,
-    employeeId = null
+    employeeId = null,
+    branchId = null
   ) => {
     try {
       const startDateTime = new Date(dateObj);
@@ -83,6 +99,7 @@ export const bookingService = {
         clientId: userId,
         serviceId: service.id,
         employeeId,
+        branchId,
         startTime: startDateTime.toISOString(),
         endTime: endDateTime.toISOString(),
       };

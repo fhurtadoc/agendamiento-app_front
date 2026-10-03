@@ -23,7 +23,7 @@ const getInitials = (value) => {
 };
 
 const EmployeeSelection = ({
-  selectedService,
+  selectedBranch,
   onBack,
   onSelectEmployee,
 }) => {
@@ -32,25 +32,40 @@ const EmployeeSelection = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const branchId = selectedBranch?.id;
+
+  // Employees are fetched conditionally on the selected branch
   const loadEmployees = useCallback(async () => {
     setLoading(true);
     setError(null);
     setEmployees([]);
 
+    if (!branchId) {
+      setError(
+        t('booking.error_no_branch', {
+          defaultValue: 'Debes seleccionar una sucursal primero.',
+        })
+      );
+      setLoading(false);
+      return;
+    }
+
     try {
-      const availableEmployees = await bookingService.getAvailableEmployees();
+      const availableEmployees = await bookingService.getAvailableEmployees(
+        branchId
+      );
       setEmployees(availableEmployees);
     } catch (err) {
       console.error('Error loading employees:', err);
       setError(
         t('booking.error_loading_employees', {
-          defaultValue: 'No pudimos cargar las empleadas disponibles.',
+          defaultValue: 'No pudimos cargar los empleados disponibles.',
         })
       );
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [t, branchId]);
 
   useEffect(() => {
     loadEmployees();
@@ -69,8 +84,10 @@ const EmployeeSelection = ({
         </button>
 
         <div className={styles.serviceInfo}>
-          <span>{t('booking.label')}</span>
-          <strong>{selectedService?.title}</strong>
+          <span>
+            {t('booking.branch_label', { defaultValue: 'Sucursal' })}
+          </span>
+          <strong>{selectedBranch?.name}</strong>
         </div>
       </div>
 

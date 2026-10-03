@@ -13,6 +13,82 @@
   text-align: left;
 }
 
+/* Header con botón de volver (paso de servicio) */
+.stepHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.stepHeader h2 {
+  margin-bottom: 0;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.backButton:hover {
+  color: #ffffff;
+  background: #4f46e5;
+  border-color: #4f46e5;
+}
+
+/* Tarjeta de sucursal (paso 1) */
+.branchCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 20px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.branchCard:hover {
+  border-color: #4c40e6;
+  color: #4c40e6;
+  background-color: #f5f3ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 64, 230, 0.12);
+}
+
+.branchName {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.branchCard:hover .branchName {
+  color: #4c40e6;
+}
+
+.branchAddress {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
 /* LA GRILLA RESPONSIVA */
 .grid {
   display: grid;

@@ -1,11 +1,11 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next'; // <--- Import i18n hook
-import { Calendar, Clock, Scissors, CheckCircle, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, Scissors, CheckCircle, AlertCircle } from 'lucide-react';
 import styles from './css/Confirmation.module.css';
 
 const Confirmation = ({ bookingData, onBack, onConfirm, loading }) => {
   const { t, i18n } = useTranslation(); // <--- Init hook
-  const { service, date, time } = bookingData;
+  const { branch, service, date, time } = bookingData;
 
   // Readable date format based on current language
   const dateString = date.toLocaleDateString(i18n.language, { 
@@ -20,6 +20,22 @@ const Confirmation = ({ bookingData, onBack, onConfirm, loading }) => {
       <h2 className={styles.title}>{t('booking.review_title')}</h2>
       
       <div className={styles.summaryCard}>
+        {/* BRANCH DETAILS */}
+        <div className={styles.row}>
+          <div className={styles.iconBox}><MapPin size={20} /></div>
+          <div className={styles.details}>
+            <span className={styles.label}>
+              {t('booking.branch_label', { defaultValue: 'Sucursal' })}
+            </span>
+            <strong className={styles.value}>{branch?.name}</strong>
+            {branch?.address && (
+              <span className={styles.subtext}>{branch.address}</span>
+            )}
+          </div>
+        </div>
+
+        <div className={styles.divider}></div>
+
         {/* SERVICE DETAILS */}
         <div className={styles.row}>
           <div className={styles.iconBox}><Scissors size={20} /></div>
