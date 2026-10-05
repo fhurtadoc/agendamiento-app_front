@@ -28,6 +28,7 @@ import AdminSettings from './views/admin/AdminSettings';
 import { AdminCalendarView } from './views/admin/AdminCalendarView';
 import AdminScheduleView from './views/admin/AdminScheduleView';
 import { CreateServiceView } from './views/admin/CreateServiceView';
+import EmployeeBranchesView from './views/admin/EmployeeBranchesView';
 
 // --- LAYOUTS ---
 import Layout from './components/Layout/Layoutview';
@@ -147,6 +148,7 @@ function App() {
             <Route path="schedule" element={<AdminScheduleView />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="services/new" element={<CreateServiceView />} />
+            <Route path="employee-branches" element={<EmployeeBranchesView />} />
           </Route>
         </Route>
 
