@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useTenant } from '../../context/TenantContext';
-import { employeeBranchesService } from '../../services/employeeBranches.service';
-import { groupEmployeesByBranch } from '../../adapters/employeeBranches.adapter';
-import styles from './css/EmployeeBranches.module.css';
+import { useTenant } from '../../../agendamiento-app/src/context/TenantContext';
+import { employeeBranchesService } from '../../../agendamiento-app/src/services/employeeBranches.service';
+import { groupEmployeesByBranch } from '../../../agendamiento-app/src/adapters/employeeBranches.adapter';
+import styles from '../../../agendamiento-app/src/views/admin/css/EmployeeBranches.module.css';
 
 export const EmployeeBranchesView = () => {
   const { t } = useTranslation();

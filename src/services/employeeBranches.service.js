@@ -1,5 +1,5 @@
-import { supabase } from '../supabaseClient';
-import { toAssignmentPayload } from '../adapters/employeeBranches.adapter';
+import { supabase } from '../../agendamiento-app/src/services/supabaseClient';
+import { toAssignmentPayload } from '../../agendamiento-app/src/adapters/employeeBranches.adapter';
 
 const AUTH_REQUEST_TIMEOUT_MS = 10000;
 
