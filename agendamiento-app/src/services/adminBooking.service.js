@@ -35,11 +35,34 @@ export const adminBookingService = {
       .order('name', { ascending: true, nullsFirst: false });
 
     if (error) {
-      throwSupabaseError(error, 'Unable to load services.');
+      throwSupabaseError(
+        error,
+        'Unable to load services.'
+      );
     }
 
     return (data || []).map((service) =>
       adminBookingAdapter.toServiceDTO(service, locale)
+    );
+  },
+
+  async getBranches() {
+    const { data, error } = await supabase
+      .from('branches')
+      .select('id, name, address, tenant_id')
+      .eq('tenant_id', TENANT_ID)
+      .eq('is_active', true)
+      .order('name', { ascending: true, nullsFirst: false });
+
+    if (error) {
+      throwSupabaseError(
+        error,
+        'Unable to load branches.'
+      );
+    }
+
+    return adminBookingAdapter.toBranchDTOList(
+      data || []
     );
   },
 
@@ -48,10 +71,16 @@ export const adminBookingService = {
       .from('profiles')
       .select('*, email')
       .eq('is_active', true)
-      .order('full_name', { ascending: true, nullsFirst: true });
+      .order('full_name', {
+        ascending: true,
+        nullsFirst: true,
+      });
 
     if (error) {
-      throwSupabaseError(error, 'Unable to load clients.');
+      throwSupabaseError(
+        error,
+        'Unable to load clients.'
+      );
     }
 
     const excludedRoles = new Set([
@@ -70,53 +99,105 @@ export const adminBookingService = {
 
         return !role || !excludedRoles.has(role);
       })
-      .map((profile) => adminBookingAdapter.toClientDTO(profile));
+      .map((profile) =>
+        adminBookingAdapter.toClientDTO(profile)
+      );
   },
 
-  async getEmployees() {
-    const rpcResult = await supabase.rpc('obtener_empleados_disponibles');
+  async getEmployees(branchId) {
+    const normalizedBranchId = String(branchId ?? '').trim();
+
+    if (!normalizedBranchId) {
+      throw new Error('A branch ID is required.');
+    }
+
+    const rpcResult = await supabase.rpc(
+      'obtener_empleados_disponibles'
+    );
+
+    let availableEmployeeIds = null;
 
     if (!rpcResult.error) {
-      return (rpcResult.data || [])
-        .filter((employee) => employee.is_active !== false)
-        .map((employee) => adminBookingAdapter.toEmployeeDTO(employee));
+      const availableEmployees = rpcResult.data || [];
+
+      if (availableEmployees.length === 0) {
+        return [];
+      }
+
+      availableEmployeeIds = new Set(
+        availableEmployees
+          .map((employee) => String(employee.id ?? ''))
+          .filter(Boolean)
+      );
     }
 
     const { data, error } = await supabase
       .from('profiles')
       .select('*, email')
       .in('role', ['employee', 'empleado'])
+      .eq('branch_id', normalizedBranchId)
       .eq('is_active', true)
-      .order('full_name', { ascending: true, nullsFirst: true });
+      .order('full_name', {
+        ascending: true,
+        nullsFirst: true,
+      });
 
     if (error) {
-      throwSupabaseError(error, 'Unable to load employees.');
+      throwSupabaseError(
+        error,
+        'Unable to load employees.'
+      );
     }
 
-    return (data || []).map((employee) =>
-      adminBookingAdapter.toEmployeeDTO(employee)
-    );
+    return (data || [])
+      .filter((employee) => {
+        if (!availableEmployeeIds) return true;
+
+        return availableEmployeeIds.has(
+          String(employee.id)
+        );
+      })
+      .map((employee) =>
+        adminBookingAdapter.toEmployeeDTO(employee)
+      );
   },
 
-  async getAvailableSlots(date, employeeId, locale = DEFAULT_LOCALE) {
+  async getAvailableSlots(
+    date,
+    employeeId,
+    locale = DEFAULT_LOCALE
+  ) {
     const datePart = normalizeRequestDate(date);
-    const normalizedEmployeeId = String(employeeId ?? '').trim();
+    const normalizedEmployeeId = String(
+      employeeId ?? ''
+    ).trim();
 
     if (!datePart || !normalizedEmployeeId) {
-      throw new Error('Date and employee ID are required.');
+      throw new Error(
+        'Date and employee ID are required.'
+      );
     }
 
-    const { data, error } = await supabase.rpc('get_available_slots', {
-      query_date: datePart,
-      query_employee_id: normalizedEmployeeId,
-      tenant_filter: TENANT_ID,
-    });
+    const { data, error } = await supabase.rpc(
+      'get_available_slots',
+      {
+        query_date: datePart,
+        query_employee_id: normalizedEmployeeId,
+        tenant_filter: TENANT_ID,
+      }
+    );
 
     if (error) {
-      throwSupabaseError(error, 'Unable to load available time slots.');
+      throwSupabaseError(
+        error,
+        'Unable to load available time slots.'
+      );
     }
 
-    return adminBookingAdapter.toSlotDTOList(data || [], locale);
+    return adminBookingAdapter.toSlotDTOList(
+      data || [],
+      locale
+    );
   },
 
   async createAppointment(selection) {
@@ -132,11 +213,16 @@ export const adminBookingService = {
       .single();
 
     if (error) {
-      throwSupabaseError(error, 'Unable to create the appointment.');
+      throwSupabaseError(
+        error,
+        'Unable to create the appointment.'
+      );
     }
 
     if (!data) {
-      throw new Error('The appointment was not created.');
+      throw new Error(
+        'The appointment was not created.'
+      );
     }
 
     return adminBookingAdapter.toAppointmentDTO(data);

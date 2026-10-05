@@ -136,6 +136,21 @@ export const adminBookingAdapter = {
     };
   },
 
+  toBranchDTO(branch) {
+    const source = branch ?? {};
+
+    return {
+      id: source.id,
+      name: source.name ?? '',
+      address: source.address ?? '',
+      tenantId: source.tenant_id ?? source.tenantId ?? null,
+    };
+  },
+
+  toBranchDTOList(branches = []) {
+    return (branches ?? []).map((branch) => this.toBranchDTO(branch));
+  },
+
   toClientDTO(profile, locale = DEFAULT_LOCALE) {
     const source = profile ?? {};
 
@@ -168,6 +183,7 @@ export const adminBookingAdapter = {
       email: source.email ?? '',
       phone: source.phone ?? '',
       role: source.role ?? 'employee',
+      branchId: source.branch_id ?? source.branchId ?? null,
       isActive: source.is_active !== false,
     };
   },
@@ -217,7 +233,8 @@ export const adminBookingAdapter = {
       .filter(Boolean);
   },
 
-  toAppointmentPayload(selection) {
+  toAppointmentPayload(selection = {}) {
+    const branch = selection.branch ?? {};
     const service = selection.service ?? {};
     const client = selection.client ?? {};
     const employee = selection.employee ?? {};
@@ -242,30 +259,50 @@ export const adminBookingAdapter = {
         service.durationMinutes
     );
 
+    if (!branch.id) {
+      throw new Error(
+        'A branch is required to create an appointment.'
+      );
+    }
+
     if (!client.id) {
-      throw new Error('A client is required to create an appointment.');
+      throw new Error(
+        'A client is required to create an appointment.'
+      );
     }
 
     if (!employee.id) {
-      throw new Error('An employee is required to create an appointment.');
+      throw new Error(
+        'An employee is required to create an appointment.'
+      );
     }
 
     if (!service.id) {
-      throw new Error('A service is required to create an appointment.');
+      throw new Error(
+        'A service is required to create an appointment.'
+      );
     }
 
     if (!datePart || !timePart) {
-      throw new Error('A valid date and time are required.');
+      throw new Error(
+        'A valid date and time are required.'
+      );
     }
 
     if (!durationMinutes || durationMinutes <= 0) {
-      throw new Error('The selected service has an invalid duration.');
+      throw new Error(
+        'The selected service has an invalid duration.'
+      );
     }
 
-    const startDateTime = new Date(`${datePart}T${timePart}:00`);
+    const startDateTime = new Date(
+      `${datePart}T${timePart}:00`
+    );
 
     if (Number.isNaN(startDateTime.getTime())) {
-      throw new Error('The selected appointment date is invalid.');
+      throw new Error(
+        'The selected appointment date is invalid.'
+      );
     }
 
     const endDateTime = new Date(
@@ -274,6 +311,7 @@ export const adminBookingAdapter = {
 
     return {
       tenant_id: selection.tenantId,
+      branch_id: branch.id,
       client_id: client.id,
       employee_id: employee.id,
       service_id: service.id,
@@ -289,6 +327,7 @@ export const adminBookingAdapter = {
     return {
       id: source.id,
       tenantId: source.tenant_id,
+      branchId: source.branch_id,
       clientId: source.client_id,
       employeeId: source.employee_id,
       serviceId: source.service_id,

@@ -15,6 +15,7 @@ import {
   CircleAlert,
   Clock3,
   LoaderCircle,
+  MapPin,
   Search,
   UserRound,
   X,
@@ -26,9 +27,12 @@ import bookingStyles from '../css/BookingWizard.module.css';
 import styles from './AdminBookingWizard.module.css';
 
 const FALLBACK_LOCALE = 'en';
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 6;
 
-const normalizeSearchValue = (value, locale = FALLBACK_LOCALE) =>
+const normalizeSearchValue = (
+  value,
+  locale = FALLBACK_LOCALE
+) =>
   String(value ?? '')
     .toLocaleLowerCase(locale)
     .normalize('NFD')
@@ -36,13 +40,19 @@ const normalizeSearchValue = (value, locale = FALLBACK_LOCALE) =>
 
 const getLocalDateValue = (date = new Date()) => {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(
+    2,
+    '0'
+  );
   const day = String(date.getDate()).padStart(2, '0');
 
   return `${year}-${month}-${day}`;
 };
 
-const formatDateValue = (value, locale = FALLBACK_LOCALE) => {
+const formatDateValue = (
+  value,
+  locale = FALLBACK_LOCALE
+) => {
   const date = /^\d{4}-\d{2}-\d{2}$/.test(value ?? '')
     ? new Date(`${value}T12:00:00`)
     : new Date(value);
@@ -72,7 +82,11 @@ const LoadingState = ({ label }) => (
   </div>
 );
 
-const ErrorState = ({ message, retryLabel, onRetry }) => (
+const ErrorState = ({
+  message,
+  retryLabel,
+  onRetry,
+}) => (
   <div className={styles.statePanel} role="alert">
     <CircleAlert
       className={styles.stateIcon}
@@ -80,6 +94,7 @@ const ErrorState = ({ message, retryLabel, onRetry }) => (
       aria-hidden="true"
     />
     <p className={styles.stateText}>{message}</p>
+
     {onRetry && (
       <button
         className={styles.stateAction}
@@ -114,19 +129,28 @@ const PersonOption = ({
       onClick={onClick}
       aria-label={ariaLabel}
     >
-      <span className={styles.personIcon} aria-hidden="true">
+      <span
+        className={styles.personIcon}
+        aria-hidden="true"
+      >
         <Icon size={20} strokeWidth={1.8} />
       </span>
 
       <span className={styles.optionContent}>
-        <span className={styles.primaryText}>{primary}</span>
+        <span className={styles.primaryText}>
+          {primary}
+        </span>
 
         {secondary && (
-          <span className={styles.secondaryText}>{secondary}</span>
+          <span className={styles.secondaryText}>
+            {secondary}
+          </span>
         )}
 
         {metadata && (
-          <span className={styles.secondaryText}>{metadata}</span>
+          <span className={styles.secondaryText}>
+            {metadata}
+          </span>
         )}
       </span>
 
@@ -145,30 +169,49 @@ export default function DashboardAdminView() {
   const { t, i18n } = useTranslation();
   const { showAlert } = useAlert();
   const locale =
-    i18n.resolvedLanguage || i18n.language || FALLBACK_LOCALE;
-  const today = useMemo(() => getLocalDateValue(), []);
+    i18n.resolvedLanguage ||
+    i18n.language ||
+    FALLBACK_LOCALE;
+  const today = useMemo(
+    () => getLocalDateValue(),
+    []
+  );
   const activeRequests = useRef(new Map());
+  const loadedBranches = useRef(false);
   const loadedServicesLocale = useRef(null);
 
   const [step, setStep] = useState(1);
+  const [branches, setBranches] = useState([]);
   const [services, setServices] = useState([]);
   const [clients, setClients] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [slots, setSlots] = useState([]);
 
-  const [selectedService, setSelectedService] = useState(null);
-  const [selectedClient, setSelectedClient] = useState(null);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [selectedSlot, setSelectedSlot] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(today);
+  const [selectedBranch, setSelectedBranch] =
+    useState(null);
+  const [selectedService, setSelectedService] =
+    useState(null);
+  const [selectedClient, setSelectedClient] =
+    useState(null);
+  const [selectedEmployee, setSelectedEmployee] =
+    useState(null);
+  const [selectedSlot, setSelectedSlot] =
+    useState(null);
+  const [selectedDate, setSelectedDate] = useState(
+    today
+  );
 
   const [clientSearch, setClientSearch] = useState('');
+  const [branchLoading, setBranchLoading] =
+    useState(false);
   const [stepLoading, setStepLoading] = useState(false);
   const [slotLoading, setSlotLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [branchError, setBranchError] = useState(null);
   const [stepError, setStepError] = useState(null);
   const [submitError, setSubmitError] = useState(null);
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] =
+    useState(false);
 
   const visibleClients = useMemo(() => {
     const normalizedSearch = normalizeSearchValue(
@@ -184,10 +227,14 @@ export default function DashboardAdminView() {
         client.email,
         client.phone,
       ]
-        .map((value) => normalizeSearchValue(value, locale))
+        .map((value) =>
+          normalizeSearchValue(value, locale)
+        )
         .join(' ');
 
-      return searchableValues.includes(normalizedSearch);
+      return searchableValues.includes(
+        normalizedSearch
+      );
     });
   }, [clientSearch, clients, locale]);
 
@@ -202,6 +249,7 @@ export default function DashboardAdminView() {
       key,
       request,
       setLoading,
+      setError = setStepError,
       onSuccess,
       errorMessageKey,
     }) => {
@@ -209,31 +257,41 @@ export default function DashboardAdminView() {
 
       activeRequests.current.set(key, requestId);
       setLoading?.(true);
+      setError?.(null);
 
       try {
         const result = await request();
 
-        if (activeRequests.current.get(key) !== requestId) {
+        if (
+          activeRequests.current.get(key) !== requestId
+        ) {
           return undefined;
         }
 
         onSuccess(result);
         return result;
       } catch (error) {
-        if (activeRequests.current.get(key) !== requestId) {
+        if (
+          activeRequests.current.get(key) !== requestId
+        ) {
           return undefined;
         }
 
-        console.error(`Admin booking request failed: ${key}`, error);
+        console.error(
+          `Admin booking request failed: ${key}`,
+          error
+        );
 
         const message = t(errorMessageKey);
 
-        setStepError(message);
+        setError?.(message);
         showAlert(message, 'error');
 
         return undefined;
       } finally {
-        if (activeRequests.current.get(key) === requestId) {
+        if (
+          activeRequests.current.get(key) === requestId
+        ) {
           setLoading?.(false);
         }
       }
@@ -241,10 +299,23 @@ export default function DashboardAdminView() {
     [showAlert, t]
   );
 
+  const loadBranches = useCallback(() => {
+    return runRequest({
+      key: 'admin-branches',
+      request: () =>
+        adminBookingService.getBranches(),
+      setLoading: setBranchLoading,
+      setError: setBranchError,
+      onSuccess: setBranches,
+      errorMessageKey: 'adminBooking.load_error',
+    });
+  }, [runRequest]);
+
   const loadServices = useCallback(() => {
     return runRequest({
       key: 'admin-services',
-      request: () => adminBookingService.getServices(locale),
+      request: () =>
+        adminBookingService.getServices(locale),
       setLoading: setStepLoading,
       onSuccess: setServices,
       errorMessageKey: 'adminBooking.load_error',
@@ -254,22 +325,37 @@ export default function DashboardAdminView() {
   const loadClients = useCallback(() => {
     return runRequest({
       key: 'admin-clients',
-      request: () => adminBookingService.getClients(),
+      request: () =>
+        adminBookingService.getClients(),
       setLoading: setStepLoading,
       onSuccess: setClients,
       errorMessageKey: 'adminBooking.load_error',
     });
   }, [runRequest]);
 
-  const loadEmployees = useCallback(() => {
-    return runRequest({
-      key: 'admin-employees',
-      request: () => adminBookingService.getEmployees(),
-      setLoading: setStepLoading,
-      onSuccess: setEmployees,
-      errorMessageKey: 'adminBooking.load_error',
-    });
-  }, [runRequest]);
+  const loadEmployees = useCallback(
+    (branchId) => {
+      const normalizedBranchId = String(
+        branchId ?? ''
+      ).trim();
+
+      if (!normalizedBranchId) {
+        return Promise.resolve();
+      }
+
+      return runRequest({
+        key: 'admin-employees',
+        request: () =>
+          adminBookingService.getEmployees(
+            normalizedBranchId
+          ),
+        setLoading: setStepLoading,
+        onSuccess: setEmployees,
+        errorMessageKey: 'adminBooking.load_error',
+      });
+    },
+    [runRequest]
+  );
 
   const loadSlots = useCallback(() => {
     if (!selectedEmployee?.id || !selectedDate) {
@@ -296,6 +382,17 @@ export default function DashboardAdminView() {
   ]);
 
   useEffect(() => {
+    if (loadedBranches.current) {
+      return undefined;
+    }
+
+    loadedBranches.current = true;
+    loadBranches();
+
+    return undefined;
+  }, [loadBranches]);
+
+  useEffect(() => {
     if (loadedServicesLocale.current === locale) {
       return undefined;
     }
@@ -307,7 +404,7 @@ export default function DashboardAdminView() {
   }, [loadServices, locale]);
 
   useEffect(() => {
-    if (step !== 2) return undefined;
+    if (step !== 3) return undefined;
 
     setClientSearch('');
     loadClients();
@@ -316,16 +413,32 @@ export default function DashboardAdminView() {
   }, [loadClients, step]);
 
   useEffect(() => {
-    if (step !== 3) return undefined;
+    if (step !== 4 || !selectedBranch?.id) {
+      activeRequests.current.set(
+        'admin-employees',
+        Symbol('invalid')
+      );
+      setEmployees([]);
+      setStepLoading(false);
+      setStepError(null);
 
-    loadEmployees();
+      return undefined;
+    }
+
+    loadEmployees(selectedBranch.id);
 
     return undefined;
-  }, [loadEmployees, step]);
+  }, [loadEmployees, selectedBranch?.id, step]);
 
   useEffect(() => {
-    if (step !== 4 || !selectedEmployee?.id) {
-      activeRequests.current.set('admin-slots', Symbol('invalid'));
+    if (
+      step !== 5 ||
+      !selectedEmployee?.id
+    ) {
+      activeRequests.current.set(
+        'admin-slots',
+        Symbol('invalid')
+      );
       setSlots([]);
       setSlotLoading(false);
       setStepError(null);
@@ -349,16 +462,23 @@ export default function DashboardAdminView() {
   }, [step]);
 
   const resetWizard = useCallback(() => {
-    activeRequests.current.set('admin-slots', Symbol('reset'));
+    activeRequests.current.set(
+      'admin-slots',
+      Symbol('reset')
+    );
 
     setStep(1);
+    setSelectedBranch(null);
     setSelectedService(null);
     setSelectedClient(null);
     setSelectedEmployee(null);
     setSelectedSlot(null);
-    setSelectedDate(getLocalDateValue(new Date()));
+    setSelectedDate(
+      getLocalDateValue(new Date())
+    );
     setSlots([]);
     setClientSearch('');
+    setBranchError(null);
     setSlotLoading(false);
     setStepError(null);
     setSubmitError(null);
@@ -367,6 +487,7 @@ export default function DashboardAdminView() {
 
   const handleConfirmBooking = useCallback(async () => {
     if (
+      !selectedBranch ||
       !selectedService ||
       !selectedClient ||
       !selectedEmployee ||
@@ -380,6 +501,7 @@ export default function DashboardAdminView() {
 
     try {
       await adminBookingService.createAppointment({
+        branch: selectedBranch,
         service: selectedService,
         client: selectedClient,
         employee: selectedEmployee,
@@ -387,10 +509,16 @@ export default function DashboardAdminView() {
         timeSlot: selectedSlot,
       });
 
-      showAlert(t('adminBooking.appointment_created'), 'success');
+      showAlert(
+        t('adminBooking.appointment_created'),
+        'success'
+      );
       resetWizard();
     } catch (error) {
-      console.error('Error creating admin appointment:', error);
+      console.error(
+        'Error creating admin appointment:',
+        error
+      );
 
       const message = t(
         'adminBooking.appointment_create_error'
@@ -403,6 +531,7 @@ export default function DashboardAdminView() {
     }
   }, [
     resetWizard,
+    selectedBranch,
     selectedClient,
     selectedDate,
     selectedEmployee,
@@ -412,6 +541,31 @@ export default function DashboardAdminView() {
     t,
   ]);
 
+  const handleSelectBranch = useCallback(
+    (branch) => {
+      activeRequests.current.set(
+        'admin-slots',
+        Symbol('branch-change')
+      );
+      activeRequests.current.set(
+        'admin-employees',
+        Symbol('branch-change')
+      );
+
+      setSelectedBranch(branch);
+      setSelectedEmployee(null);
+      setSelectedSlot(null);
+      setSelectedDate(today);
+      setEmployees([]);
+      setSlots([]);
+      setBranchError(null);
+      setStepError(null);
+      setSlotLoading(false);
+      setStep(2);
+    },
+    [today]
+  );
+
   const handleSelectService = useCallback(
     (service) => {
       setSelectedService(service);
@@ -419,7 +573,7 @@ export default function DashboardAdminView() {
       setSelectedEmployee(null);
       setSelectedSlot(null);
       setSelectedDate(today);
-      setStep(2);
+      setStep(3);
     },
     [today]
   );
@@ -430,48 +584,46 @@ export default function DashboardAdminView() {
       setSelectedEmployee(null);
       setSelectedSlot(null);
       setSelectedDate(today);
-      setStep(3);
+      setStep(4);
     },
     [today]
   );
 
-  const handleSelectEmployee = useCallback((employee) => {
-    setSelectedEmployee(employee);
-    setSelectedSlot(null);
-    setStep(4);
-  }, []);
+  const handleSelectEmployee = useCallback(
+    (employee) => {
+      setSelectedEmployee(employee);
+      setSelectedSlot(null);
+      setStep(5);
+    },
+    []
+  );
 
   const handleSelectSlot = useCallback((slot) => {
     setSelectedSlot(slot);
-    setStep(5);
+    setStep(6);
   }, []);
 
   const handleNext = useCallback(() => {
     if (step === TOTAL_STEPS) return;
 
-    if (
-      step === 1 &&
-      !selectedService
-    ) {
+    if (step === 1 && !selectedBranch) {
+      return;
+    }
+
+    if (step === 2 && !selectedService) {
+      return;
+    }
+
+    if (step === 3 && !selectedClient) {
+      return;
+    }
+
+    if (step === 4 && !selectedEmployee) {
       return;
     }
 
     if (
-      step === 2 &&
-      !selectedClient
-    ) {
-      return;
-    }
-
-    if (
-      step === 3 &&
-      !selectedEmployee
-    ) {
-      return;
-    }
-
-    if (
-      step === 4 &&
+      step === 5 &&
       (!selectedSlot || slotLoading)
     ) {
       return;
@@ -481,6 +633,7 @@ export default function DashboardAdminView() {
       Math.min(currentStep + 1, TOTAL_STEPS)
     );
   }, [
+    selectedBranch,
     selectedClient,
     selectedEmployee,
     selectedService,
@@ -492,7 +645,9 @@ export default function DashboardAdminView() {
   const handleBack = useCallback(() => {
     if (step === 1 || submitting) return;
 
-    setStep((currentStep) => Math.max(currentStep - 1, 1));
+    setStep((currentStep) =>
+      Math.max(currentStep - 1, 1)
+    );
   }, [step, submitting]);
 
   const requestCancel = useCallback(() => {
@@ -507,19 +662,23 @@ export default function DashboardAdminView() {
 
   const handleRetry = useCallback(() => {
     if (step === 1) {
-      loadServices();
+      loadBranches();
     } else if (step === 2) {
-      loadClients();
+      loadServices();
     } else if (step === 3) {
-      loadEmployees();
+      loadClients();
     } else if (step === 4) {
+      loadEmployees(selectedBranch?.id);
+    } else if (step === 5) {
       loadSlots();
     }
   }, [
+    loadBranches,
     loadClients,
     loadEmployees,
     loadServices,
     loadSlots,
+    selectedBranch?.id,
     step,
   ]);
 
@@ -539,14 +698,16 @@ export default function DashboardAdminView() {
 
   const isPrimaryDisabled =
     step === 1
-      ? !selectedService
+      ? !selectedBranch
       : step === 2
-        ? !selectedClient
+        ? !selectedService
         : step === 3
-          ? !selectedEmployee
+          ? !selectedClient
           : step === 4
-            ? !selectedSlot || slotLoading
-            : submitting;
+            ? !selectedEmployee
+            : step === 5
+              ? !selectedSlot || slotLoading
+              : submitting;
 
   const contactDetails = [
     selectedClient?.email,
@@ -555,7 +716,15 @@ export default function DashboardAdminView() {
     .filter(Boolean)
     .join(' · ');
 
+  const branchDetails = [
+    selectedBranch?.name,
+    selectedBranch?.address,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
   const progressSteps = [
+    t('adminBooking.step_branch'),
     t('adminBooking.step_service'),
     t('adminBooking.step_client'),
     t('adminBooking.step_employee'),
@@ -657,22 +826,30 @@ export default function DashboardAdminView() {
                     }`}
                     role="listitem"
                     aria-current={
-                      step === stepNumber ? 'step' : undefined
+                      step === stepNumber
+                        ? 'step'
+                        : undefined
                     }
-                    aria-label={t('adminBooking.step_count', {
-                      current: step,
-                      total: TOTAL_STEPS,
-                    })}
+                    aria-label={t(
+                      'adminBooking.step_count',
+                      {
+                        current: step,
+                        total: TOTAL_STEPS,
+                      }
+                    )}
                   >
                     <span className={styles.stepNumber}>
                       {stepNumber}
                     </span>
-                    <span className={styles.progressLabel}>
+                    <span
+                      className={styles.progressLabel}
+                    >
                       {label}
                     </span>
                   </div>
 
-                  {stepNumber < progressSteps.length && (
+                  {stepNumber <
+                    progressSteps.length && (
                     <div
                       className={bookingStyles.line}
                       aria-hidden="true"
@@ -686,10 +863,78 @@ export default function DashboardAdminView() {
           <div
             className={bookingStyles.stepContent}
             aria-busy={
-              stepLoading || slotLoading || submitting
+              branchLoading ||
+              stepLoading ||
+              slotLoading ||
+              submitting
             }
           >
             {step === 1 && (
+              <>
+                <h3 className={styles.subheading}>
+                  {t('adminBooking.select_branch')}
+                </h3>
+
+                {branchLoading ? (
+                  <LoadingState
+                    label={t('adminBooking.loading')}
+                  />
+                ) : branchError ? (
+                  <ErrorState
+                    message={branchError}
+                    retryLabel={t(
+                      'adminBooking.retry'
+                    )}
+                    onRetry={handleRetry}
+                  />
+                ) : branches.length === 0 ? (
+                  <EmptyState
+                    message={t(
+                      'adminBooking.no_branches'
+                    )}
+                  />
+                ) : (
+                  <div
+                    className={styles.optionsList}
+                    role="list"
+                  >
+                    {branches.map((branch) => {
+                      const branchLabel =
+                        branch.name ||
+                        branch.address ||
+                        t('adminBooking.branch');
+                      const branchAddress =
+                        branch.address &&
+                        branch.address !== branch.name
+                          ? branch.address
+                          : '';
+
+                      return (
+                        <PersonOption
+                          key={branch.id}
+                          icon={MapPin}
+                          primary={branchLabel}
+                          secondary={branchAddress}
+                          selected={
+                            selectedBranch?.id ===
+                            branch.id
+                          }
+                          ariaLabel={t(
+                            'adminBooking.select_branch_option',
+                            { branch: branchLabel }
+                          )}
+                          onClick={() =>
+                            handleSelectBranch(branch)
+                          }
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+
+            {step === 2 && (
               <>
                 <h3 className={styles.subheading}>
                   {t('adminBooking.select_service')}
@@ -702,12 +947,16 @@ export default function DashboardAdminView() {
                 ) : stepError ? (
                   <ErrorState
                     message={stepError}
-                    retryLabel={t('adminBooking.retry')}
+                    retryLabel={t(
+                      'adminBooking.retry'
+                    )}
                     onRetry={handleRetry}
                   />
                 ) : services.length === 0 ? (
                   <EmptyState
-                    message={t('adminBooking.no_services')}
+                    message={t(
+                      'adminBooking.no_services'
+                    )}
                   />
                 ) : (
                   <div className={styles.selectionGrid}>
@@ -719,7 +968,8 @@ export default function DashboardAdminView() {
                         duration={service.duration}
                         price={service.price}
                         selected={
-                          selectedService?.id === service.id
+                          selectedService?.id ===
+                          service.id
                         }
                         onClick={() =>
                           handleSelectService(service)
@@ -731,7 +981,7 @@ export default function DashboardAdminView() {
               </>
             )}
 
-            {step === 2 && (
+            {step === 3 && (
               <>
                 <h3 className={styles.subheading}>
                   {t('adminBooking.select_client')}
@@ -773,12 +1023,16 @@ export default function DashboardAdminView() {
                 ) : stepError ? (
                   <ErrorState
                     message={stepError}
-                    retryLabel={t('adminBooking.retry')}
+                    retryLabel={t(
+                      'adminBooking.retry'
+                    )}
                     onRetry={handleRetry}
                   />
                 ) : clients.length === 0 ? (
                   <EmptyState
-                    message={t('adminBooking.no_clients')}
+                    message={t(
+                      'adminBooking.no_clients'
+                    )}
                   />
                 ) : visibleClients.length === 0 ? (
                   <EmptyState
@@ -794,7 +1048,9 @@ export default function DashboardAdminView() {
                     {visibleClients.map((client) => {
                       const clientLabel =
                         client.fullName ||
-                        t('adminBooking.unnamed_client');
+                        t(
+                          'adminBooking.unnamed_client'
+                        );
 
                       return (
                         <PersonOption
@@ -804,7 +1060,8 @@ export default function DashboardAdminView() {
                           secondary={client.email}
                           metadata={client.phone}
                           selected={
-                            selectedClient?.id === client.id
+                            selectedClient?.id ===
+                            client.id
                           }
                           ariaLabel={t(
                             'adminBooking.select_client_option',
@@ -821,10 +1078,12 @@ export default function DashboardAdminView() {
               </>
             )}
 
-            {step === 3 && (
+            {step === 4 && (
               <>
                 <h3 className={styles.subheading}>
-                  {t('adminBooking.select_employee')}
+                  {t(
+                    'adminBooking.select_employee'
+                  )}
                 </h3>
 
                 {stepLoading ? (
@@ -834,12 +1093,16 @@ export default function DashboardAdminView() {
                 ) : stepError ? (
                   <ErrorState
                     message={stepError}
-                    retryLabel={t('adminBooking.retry')}
+                    retryLabel={t(
+                      'adminBooking.retry'
+                    )}
                     onRetry={handleRetry}
                   />
                 ) : employees.length === 0 ? (
                   <EmptyState
-                    message={t('adminBooking.no_employees')}
+                    message={t(
+                      'adminBooking.no_employees'
+                    )}
                   />
                 ) : (
                   <div
@@ -849,7 +1112,9 @@ export default function DashboardAdminView() {
                     {employees.map((employee) => {
                       const employeeLabel =
                         employee.fullName ||
-                        t('adminBooking.unnamed_employee');
+                        t(
+                          'adminBooking.unnamed_employee'
+                        );
 
                       return (
                         <PersonOption
@@ -859,14 +1124,17 @@ export default function DashboardAdminView() {
                           secondary={employee.email}
                           metadata={employee.phone}
                           selected={
-                            selectedEmployee?.id === employee.id
+                            selectedEmployee?.id ===
+                            employee.id
                           }
                           ariaLabel={t(
                             'adminBooking.select_employee_option',
                             { employee: employeeLabel }
                           )}
                           onClick={() =>
-                            handleSelectEmployee(employee)
+                            handleSelectEmployee(
+                              employee
+                            )
                           }
                         />
                       );
@@ -876,7 +1144,7 @@ export default function DashboardAdminView() {
               </>
             )}
 
-            {step === 4 && (
+            {step === 5 && (
               <>
                 <h3 className={styles.subheading}>
                   {t('adminBooking.select_time')}
@@ -892,7 +1160,9 @@ export default function DashboardAdminView() {
                         size={18}
                         aria-hidden="true"
                       />
-                      <span>{t('adminBooking.date')}</span>
+                      <span>
+                        {t('adminBooking.date')}
+                      </span>
                     </label>
 
                     <input
@@ -902,14 +1172,18 @@ export default function DashboardAdminView() {
                       value={selectedDate}
                       min={today}
                       disabled={submitting}
-                      aria-label={t('adminBooking.date')}
+                      aria-label={t(
+                        'adminBooking.date'
+                      )}
                       onChange={handleDateChange}
                     />
                   </div>
 
                   <div className={styles.slotsPanel}>
                     <h4 className={styles.slotsHeading}>
-                      {t('adminBooking.available_times')}
+                      {t(
+                        'adminBooking.available_times'
+                      )}
                     </h4>
 
                     {!selectedEmployee ? (
@@ -920,17 +1194,23 @@ export default function DashboardAdminView() {
                       />
                     ) : slotLoading ? (
                       <LoadingState
-                        label={t('adminBooking.loading')}
+                        label={t(
+                          'adminBooking.loading'
+                        )}
                       />
                     ) : stepError ? (
                       <ErrorState
                         message={stepError}
-                        retryLabel={t('adminBooking.retry')}
+                        retryLabel={t(
+                          'adminBooking.retry'
+                        )}
                         onRetry={handleRetry}
                       />
                     ) : slots.length === 0 ? (
                       <EmptyState
-                        message={t('adminBooking.no_slots')}
+                        message={t(
+                          'adminBooking.no_slots'
+                        )}
                       />
                     ) : (
                       <div
@@ -945,13 +1225,15 @@ export default function DashboardAdminView() {
                             <button
                               key={slot.value}
                               className={`${styles.slotButton} ${
-                                selectedSlot?.value === slot.value
+                                selectedSlot?.value ===
+                                slot.value
                                   ? styles.selectedSlot
                                   : ''
                               }`}
                               type="button"
                               disabled={
-                                submitting || slotLoading
+                                submitting ||
+                                slotLoading
                               }
                               aria-label={t(
                                 'adminBooking.select_slot_option',
@@ -965,7 +1247,9 @@ export default function DashboardAdminView() {
                                 size={17}
                                 aria-hidden="true"
                               />
-                              <span>{slotLabel}</span>
+                              <span>
+                                {slotLabel}
+                              </span>
                             </button>
                           );
                         })}
@@ -987,7 +1271,7 @@ export default function DashboardAdminView() {
               </>
             )}
 
-            {step === 5 && (
+            {step === 6 && (
               <>
                 <h3 className={styles.subheading}>
                   {t('adminBooking.step_confirm')}
@@ -1001,11 +1285,25 @@ export default function DashboardAdminView() {
                   <dl className={styles.summaryList}>
                     <div className={styles.summaryItem}>
                       <dt className={styles.summaryLabel}>
+                        {t('adminBooking.branch')}
+                      </dt>
+                      <dd className={styles.summaryValue}>
+                        {branchDetails ||
+                          t(
+                            'adminBooking.no_branches'
+                          )}
+                      </dd>
+                    </div>
+
+                    <div className={styles.summaryItem}>
+                      <dt className={styles.summaryLabel}>
                         {t('adminBooking.service')}
                       </dt>
                       <dd className={styles.summaryValue}>
                         {selectedService?.title ||
-                          t('adminBooking.service_unavailable')}
+                          t(
+                            'adminBooking.service_unavailable'
+                          )}
                       </dd>
                     </div>
 
@@ -1015,7 +1313,9 @@ export default function DashboardAdminView() {
                       </dt>
                       <dd className={styles.summaryValue}>
                         {selectedClient?.fullName ||
-                          t('adminBooking.client_unavailable')}
+                          t(
+                            'adminBooking.client_unavailable'
+                          )}
                       </dd>
                     </div>
 
@@ -1025,7 +1325,9 @@ export default function DashboardAdminView() {
                       </dt>
                       <dd className={styles.summaryValue}>
                         {selectedEmployee?.fullName ||
-                          t('adminBooking.employee_unavailable')}
+                          t(
+                            'adminBooking.employee_unavailable'
+                          )}
                       </dd>
                     </div>
 
@@ -1075,7 +1377,9 @@ export default function DashboardAdminView() {
                       </dt>
                       <dd className={styles.summaryValue}>
                         {contactDetails ||
-                          t('adminBooking.no_contact')}
+                          t(
+                            'adminBooking.no_contact'
+                          )}
                       </dd>
                     </div>
                   </dl>
@@ -1084,7 +1388,9 @@ export default function DashboardAdminView() {
                 {submitError && (
                   <ErrorState
                     message={submitError}
-                    retryLabel={t('adminBooking.retry')}
+                    retryLabel={t(
+                      'adminBooking.retry'
+                    )}
                     onRetry={handleConfirmBooking}
                   />
                 )}
@@ -1107,10 +1413,15 @@ export default function DashboardAdminView() {
               <button
                 className={`${styles.button} ${styles.secondaryButton}`}
                 type="button"
-                disabled={step === 1 || submitting}
+                disabled={
+                  step === 1 || submitting
+                }
                 onClick={handleBack}
               >
-                <ChevronLeft size={17} aria-hidden="true" />
+                <ChevronLeft
+                  size={17}
+                  aria-hidden="true"
+                />
                 {t('adminBooking.back')}
               </button>
 
@@ -1121,14 +1432,18 @@ export default function DashboardAdminView() {
                 aria-label={primaryLabel}
                 onClick={primaryAction}
               >
-                {step === TOTAL_STEPS && submitting ? (
+                {step === TOTAL_STEPS &&
+                submitting ? (
                   <LoaderCircle
                     className={styles.iconSpin}
                     size={17}
                     aria-hidden="true"
                   />
                 ) : step === TOTAL_STEPS ? (
-                  <Check size={17} aria-hidden="true" />
+                  <Check
+                    size={17}
+                    aria-hidden="true"
+                  />
                 ) : (
                   <ChevronRight
                     size={17}
@@ -1147,7 +1462,9 @@ export default function DashboardAdminView() {
           className={styles.modalBackdrop}
           role="presentation"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
+            if (
+              event.target === event.currentTarget
+            ) {
               requestCancel();
             }
           }}
@@ -1187,7 +1504,9 @@ export default function DashboardAdminView() {
                 type="button"
                 onClick={requestCancel}
               >
-                {t('adminBooking.keep_editing')}
+                {t(
+                  'adminBooking.keep_editing'
+                )}
               </button>
 
               <button
