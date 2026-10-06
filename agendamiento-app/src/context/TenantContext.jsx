@@ -2,10 +2,8 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { tenantService } from '../services/tenantService';
 import { tenantAdapter } from '../adapters/tenantAdapter';
 
-// ID TEMPORAL: Reemplaza esto con el UUID de tu Tenant creado en Supabase
-// (Lo obtienes de tu tabla 'tenants')
+// Retrieve Tenant ID ONLY from environment variables
 const TENANT_ID = import.meta.env.VITE_KEY_TENANTS; 
-//console.log("Tenant ID cargado:", TENANT_ID);
 
 const TenantContext = createContext();
 
@@ -14,21 +12,26 @@ export function TenantProvider({ children }) {
 
   useEffect(() => {
     const loadTenant = async () => {
-      // 1. Llamamos a la Capa 1 (Servicio)
-      const { data, error } = await tenantService.getTenantConfig(TENANT_ID);
-      
-      if (error) {
-        console.error("Error cargando tenant:", error);
+      if (!TENANT_ID) {
+        console.error("⚠️ VITE_KEY_TENANTS is not defined in environment variables.");
         return;
       }
 
-      // 2. Pasamos por la Capa 2 (Adaptador)
+      // 1. Service Layer
+      const { data, error } = await tenantService.getTenantConfig(TENANT_ID);
+      
+      if (error) {
+        console.error("Error loading tenant config:", error);
+        return;
+      }
+
+      // 2. Adapter Layer
       const themeConfig = tenantAdapter.toThemeConfig(data);
       
       setTenant(themeConfig);
       
-      // 3. Magia: Inyectar variables CSS al navegador
-      if (themeConfig) {
+      // 3. Inject CSS Theme Variables
+      if (themeConfig?.theme) {
         document.documentElement.style.setProperty('--primary-color', themeConfig.theme.primaryColor);
         document.documentElement.style.setProperty('--secondary-color', themeConfig.theme.secondaryColor);
       }
