@@ -28,7 +28,7 @@ import AdminSettings from './views/admin/AdminSettings';
 import { AdminCalendarView } from './views/admin/AdminCalendarView';
 import AdminScheduleView from './views/admin/AdminScheduleView';
 import { CreateServiceView } from './views/admin/CreateServiceView';
-import EmployeeBranchesView from './views/admin/EmployeeBranchesView';
+import {EmployeeBranchesView} from './views/admin/EmployeeBranchesView';
 
 // --- LAYOUTS ---
 import Layout from './components/Layout/Layoutview';
