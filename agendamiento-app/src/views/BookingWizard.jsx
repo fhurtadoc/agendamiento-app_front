@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { bookingService } from '../services/booking.service';
 import { useAlert } from '../context/AlertContext';
 
+import BranchSelection from './BranchSelection';
 import ServiceSelection from './ServiceSelection';
 import EmployeeSelection from './EmployeeSelection';
 import TimeSelection from './TimeSelection';
@@ -20,7 +21,9 @@ const BookingWizard = () => {
   const navigate = useNavigate();
   const { showAlert } = useAlert();
 
+  // "branch" is the new first selection in the flow
   const [bookingData, setBookingData] = useState({
+    branch: null,
     service: null,
     employee: null,
     employeeId: null,
@@ -31,23 +34,39 @@ const BookingWizard = () => {
   const nextStep = () => setStep((previousStep) => previousStep + 1);
   const prevStep = () => setStep((previousStep) => previousStep - 1);
 
-  const handleSelectService = (service) => {
+  // Step 1: Branch -> resets everything downstream (employees are branch-specific)
+  const handleSelectBranch = (branch) => {
     setBookingData((previousData) => ({
       ...previousData,
-      service,
+      branch,
       employee: null,
       employeeId: null,
+      service: null,
       date: null,
       time: null,
     }));
     nextStep();
   };
 
+  // Step 2: Employee -> date/time depend on the employee
   const handleSelectEmployee = (employee) => {
     setBookingData((previousData) => ({
       ...previousData,
       employee,
       employeeId: employee.id,
+      date: null,
+      time: null,
+    }));
+    nextStep();
+  };
+
+  // Step 3: Service -> resets date/time so the slot is re-picked consistently
+  const handleSelectService = (service) => {
+    setBookingData((previousData) => ({
+      ...previousData,
+      service,
+      date: null,
+      time: null,
     }));
     nextStep();
   };
@@ -67,6 +86,16 @@ const BookingWizard = () => {
       return;
     }
 
+    if (!bookingData.branch?.id) {
+      showAlert(
+        t('booking.error_no_branch', {
+          defaultValue: 'Debes seleccionar una sucursal para continuar.',
+        }),
+        'error'
+      );
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -75,7 +104,8 @@ const BookingWizard = () => {
         bookingData.service,
         bookingData.date,
         bookingData.time,
-        bookingData.employeeId
+        bookingData.employeeId,
+        bookingData.branch.id
       );
 
       showAlert(t('success.reservation_created'));
@@ -91,56 +121,60 @@ const BookingWizard = () => {
     }
   };
 
+  const stepLabels = [
+    t('booking.step_branch', { defaultValue: 'Sucursal' }),
+    t('booking.step_employee', { defaultValue: 'Empleado' }),
+    t('booking.step_service', { defaultValue: 'Servicio' }),
+    t('booking.step_time', { defaultValue: 'Horario' }),
+    t('booking.step_confirm', { defaultValue: 'Confirmar' }),
+  ];
+
   return (
     <div className={styles.wizardContainer}>
       <div className={styles.progressBar}>
-        <div
-          className={`${styles.step} ${
-            step >= 1 ? styles.activeStep : ''
-          }`}
-        >
-          1. {t('booking.step_service')}
-        </div>
-        <div className={styles.line}></div>
-        <div
-          className={`${styles.step} ${
-            step >= 2 ? styles.activeStep : ''
-          }`}
-        >
-          2. {t('booking.step_employee')}
-        </div>
-        <div className={styles.line}></div>
-        <div
-          className={`${styles.step} ${
-            step >= 3 ? styles.activeStep : ''
-          }`}
-        >
-          3. {t('booking.step_time')}
-        </div>
-        <div className={styles.line}></div>
-        <div
-          className={`${styles.step} ${
-            step >= 4 ? styles.activeStep : ''
-          }`}
-        >
-          4. {t('booking.step_confirm')}
-        </div>
+        {stepLabels.map((label, index) => {
+          const stepNumber = index + 1;
+
+          return (
+            <React.Fragment key={`step-${stepNumber}`}>
+              {index > 0 && <div className={styles.line}></div>}
+              <div
+                className={`${styles.step} ${
+                  step >= stepNumber ? styles.activeStep : ''
+                }`}
+              >
+                {stepNumber}. {label}
+              </div>
+            </React.Fragment>
+          );
+        })}
       </div>
 
       <div className={styles.stepContent}>
+        {/* Step 1: Branch (NEW) */}
         {step === 1 && (
-          <ServiceSelection onSelectService={handleSelectService} />
+          <BranchSelection onSelectBranch={handleSelectBranch} />
         )}
 
+        {/* Step 2: Employee (filtered by selected branch) */}
         {step === 2 && (
           <EmployeeSelection
-            selectedService={bookingData.service}
+            selectedBranch={bookingData.branch}
             onBack={prevStep}
             onSelectEmployee={handleSelectEmployee}
           />
         )}
 
+        {/* Step 3: Service */}
         {step === 3 && (
+          <ServiceSelection
+            onBack={prevStep}
+            onSelectService={handleSelectService}
+          />
+        )}
+
+        {/* Step 4: Time */}
+        {step === 4 && (
           <TimeSelection
             selectedService={bookingData.service}
             selectedEmployeeId={bookingData.employeeId}
@@ -149,7 +183,8 @@ const BookingWizard = () => {
           />
         )}
 
-        {step === 4 && (
+        {/* Step 5: Confirm */}
+        {step === 5 && (
           <Confirmation
             bookingData={bookingData}
             onBack={prevStep}

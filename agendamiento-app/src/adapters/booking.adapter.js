@@ -2,6 +2,28 @@ import { supabase } from '../services/supabaseClient';
 
 export const bookingAdapter = {
   /**
+   * Branches available for the current tenant.
+   */
+  getBranches: async (tenantId) => {
+    if (!tenantId) return [];
+
+    const { data, error } = await supabase
+      .from('branches')
+      .select('id, name, address, tenant_id')
+      .eq('tenant_id', tenantId)
+      .order('name', { ascending: true });
+
+    if (error) throw new Error(error.message);
+
+    return (data || []).map((branch) => ({
+      id: branch.id,
+      name: branch.name,
+      address: branch.address || '',
+      tenantId: branch.tenant_id,
+    }));
+  },
+
+  /**
    * Obtiene solo los servicios activos para mostrar al cliente.
    */
   getActiveServices: async () => {
@@ -24,18 +46,29 @@ export const bookingAdapter = {
   },
 
   /**
-   * Obtiene empleadas activas con rol de empleada.
+   * Obtiene los empleados activos.
+   * Cuando llega un branchId, filtra por role = 'employee' AND branch_id.
    */
-  getActiveEmployees: async () => {
-    const { data, error } = await supabase
-      .rpc('obtener_empleados_disponibles');
+  getActiveEmployees: async (branchId = null) => {
+    let query = supabase
+      .from('profiles')
+      .select('id, full_name, email, branch_id')
+      .eq('role', 'employee')
+      .eq('is_active', true)
+      .order('full_name', { ascending: true });
+
+    if (branchId) {
+      query = query.eq('branch_id', branchId);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw new Error(error.message);
 
     return (data || []).map((employee) => ({
       id: employee.id,
       name: employee.full_name || 'Empleado sin nombre',
-      email: '', // Mantenemos la propiedad vacía para no romper el mapeo de la UI
+      email: employee.email || '',
     }));
   },
 
@@ -62,10 +95,15 @@ export const bookingAdapter = {
     if (authError) throw authError;
     if (!user) throw new Error('Usuario no autenticado');
 
+    if (!appointmentPayload.branchId) {
+      throw new Error('A branch is required to create an appointment.');
+    }
+
     const { data, error } = await supabase
       .from('appointments')
       .insert({
         tenant_id: '40764130-8de4-4408-80bc-a8af3b002c7e',
+        branch_id: appointmentPayload.branchId,
         client_id: user.id,
         service_id: appointmentPayload.serviceId,
         employee_id: appointmentPayload.employeeId || null,
